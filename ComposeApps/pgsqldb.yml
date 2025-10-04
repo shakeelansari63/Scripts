@@ -1,0 +1,21 @@
+name: freak-pgsqldb
+networks:
+  default:
+    name: freak-pgsqldb-net
+services:
+  pgsql-db:
+    image: docker.io/library/postgres:17
+    container_name: freak-pgsql-db
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_PASSWORD: Freak!123
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/bash -c ':> /dev/tcp/127.0.0.1/5432'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "5432:5432"
+    volumes:
+      - "/home/freak/Freak/System/DockerVolumes/PostgreSQL:/var/lib/postgresql/data"

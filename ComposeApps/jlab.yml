@@ -1,0 +1,23 @@
+name: freak-jupyterlab
+networks:
+  default:
+    name: freak-jupyterlab-net
+services:
+  jupyter-lab:
+    image: quay.io/jupyter/minimal-notebook:latest
+    container_name: freak-jupyter-lab
+    environment:
+      JUPYTER_ENABLE_LAB: yes
+      JUPYTER_TOKEN: Freak!123
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/bash -c ':> /dev/tcp/127.0.0.1/8888'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "53083:8888"
+    volumes:
+      - "/home/freak/Freak/System/DockerVolumes/PySpark:/home/jovyan/work"
+      - "/home/freak/Trainings/PYSPARK/:/home/jovyan/PySparkTraining"
+      - "${PWD}:/home/jovyan/CurrentProject"

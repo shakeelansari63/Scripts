@@ -1,0 +1,62 @@
+#!/bin/bash
+CONFIG_PATH=${DEV_MOUNT_POINT}/Configs
+NOTES_PATH=${DEV_MOUNT_POINT}/Notes
+WALLPAPERS_PATH=${DEV_MOUNT_POINT}/Wallpapers
+HOME_PATH=${DEV_MOUNT_POINT}/Home
+TRAININGS_PATH=${DEV_MOUNT_POINT}/Trainings
+APIS_PATH=${DEV_MOUNT_POINT}/API-Collections
+
+########### Update Configs ######################
+cd ${CONFIG_PATH}
+if [[ "$(which flatpak 2>/dev/null)" != "" ]]
+then
+    # Update My Installed Flatpaks List
+
+    echo
+    echo -e "\033[0;35m> Updating Flatpaks List ------------------> \033[0m"
+    echo
+    flatpak list --app --columns=application,origin | grep 'flathub' | awk '{print $1}' | tee my-flatpaks.list
+    echo
+fi
+if [[ "$(which snap 2>/dev/null)" != "" && -e ~/snap/ ]]
+then
+    # Update My Installed Flatpaks List
+    echo -e "\033[0;35m> Updating Snap List ----------------------> \033[0m"
+    echo
+    ls ~/snap/ | tee my-snap.list
+    #snap list | grep docker | awk '{print $1}' | tee -a my-snap.list
+    echo
+fi
+echo -e "\033[0;35m> Updating Configs ------------------------> \033[0m"
+echo
+gitPull && commitAndPush "Update Configs"
+
+########### Update Notes ######################
+echo
+echo -e "\033[0;35m> Updating Notes --------------------------> \033[0m"
+echo
+cd ${NOTES_PATH} && gitPull && commitAndPush "Update Notes"
+
+########### Update Trainings #################
+echo
+echo -e "\033[0;35m> Updating Trainings Directory ------------> \033[0m"
+echo
+cd ${TRAININGS_PATH} && gitPull && commitAndPush "Update Trainings"
+
+########### Update Home ######################
+echo
+echo -e "\033[0;35m> Updating Home Directory -----------------> \033[0m"
+echo
+cd ${HOME_PATH} && gitPull && commitAndPush "Update Home"
+
+########### Update Wallpapers ######################
+echo
+echo -e "\033[0;35m> Updating Wallpapers ---------------------> \033[0m"
+echo
+cd ${WALLPAPERS_PATH} && gitPull && commitAndPush "Update Wallpapers"
+
+########### Update API Collections ######################
+echo
+echo -e "\033[0;35m> Updating API Collections ----------------> \033[0m"
+echo
+cd ${APIS_PATH} && gitPull && commitAndPush "Update API Collections"

@@ -1,0 +1,27 @@
+#!/bin/bash
+val=$1
+
+function show_help()
+{
+    echo "volctl [+n | -n | n]"
+    echo "+n: increment volume by n%"
+    echo "-n: decrement volume by n%"
+    echo " n: set volume to n%"
+    echo "where n is number"
+}
+
+if [[ "$val" == "" ]]
+then
+    show_help
+    exit 1
+fi
+
+check_value=$(echo $val | grep -iEe '^[+-]{0,1}[0-9]+$')
+
+if [[ "$check_value" == "" ]]
+then
+    show_help
+    exit 1
+fi
+
+pactl list | grep -oP 'Sink #\K([0-9]+)' | while read -r i ; do pactl -- set-sink-volume $i ${val}% ; done

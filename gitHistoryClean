@@ -1,0 +1,27 @@
+#!/bin/bash
+## Get latest Branch
+BASE_BRANCH="$(git branch -l master main | tr -d '*' | tr -d ' ')"
+
+if [[ "$BASE_BRANCH" == "" ]]
+then
+    echo "Cannot identify main branch"
+    exit 1
+fi
+
+## Create new Orphan Branch
+git checkout --orphan latest_branch
+
+## Add all files to new Branch
+git add . && git add ./*
+
+## Commit
+git commit -am "Cleaning History"
+
+## Delete Main Branch
+git branch -D ${BASE_BRANCH}
+
+## Rename Current Branch to main
+git branch -m ${BASE_BRANCH}
+
+## Push All
+git push -u origin ${BASE_BRANCH} -f

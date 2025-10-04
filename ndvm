@@ -1,0 +1,182 @@
+#!/bin/bash
+NODE_INSTALLER='https://nodejs.org/dist'
+PLATFORM_TYPE='linux'
+PLATFORM_ARCH='x64'
+TEMP_FILE=$(mktemp)
+
+if [[ "$NODE_INSTALLER_HOME" == "" ]]
+then
+    NODE_INSTALLER_HOME="$HOME/.node-manager"
+fi
+
+[ ! -e $NODE_INSTALLER_HOME ] && mkdir $NODE_INSTALLER_HOME
+
+NODE_CURRENT_PATH="$NODE_INSTALLER_HOME/current"
+NODE_RELEASE_URL="https://api.github.com/repos/nodejs/node/releases/latest"
+
+NODE_INSTALLER_ACTION=$1
+NODE_VERSION=$2
+
+#### Functions ####
+function install_node()
+{
+    NODE_VERSION_TOINSTALL=$1
+    NODE_INSTALLER_PATH=$(node_install_path $NODE_VERSION_TOINSTALL)
+    NODE_PACKAGE_NAME=$(get_package_from_version $NODE_VERSION_TOINSTALL)
+    NODE_DOWNLOAD_PATH=${NODE_INSTALLER}/${NODE_VERSION_TOINSTALL}/${NODE_PACKAGE_NAME}.tar.xz
+
+    if [[ -e "$NODE_INSTALLER_PATH" ]]
+    then
+        echo "Node version $NODE_VERSION_TOINSTALL is already installed"
+    else
+        echo "Installing Node version $NODE_VERSION_TOINSTALL"
+        curl $NODE_DOWNLOAD_PATH --output ${TEMP_FILE}.tar.xz
+
+        if [[ $? -eq 0 ]]
+        then
+            #mkdir $NODE_INSTALLER_PATH
+            tar -xJf ${TEMP_FILE}.tar.xz -C $NODE_INSTALLER_HOME
+
+            if [[ -e "$NODE_INSTALLER_HOME/$NODE_PACKAGE_NAME" ]]
+            then
+                mv "$NODE_INSTALLER_HOME/$NODE_PACKAGE_NAME" $NODE_INSTALLER_PATH
+            else
+                echo "Problem unpacking the package"
+            fi
+        else
+            echo "Problem downloading Node installer"
+        fi
+    fi
+}
+
+function get_package_from_version()
+{
+    NODE_VERSION_TOINSTALL=$1
+    echo node-${NODE_VERSION_TOINSTALL}-${PLATFORM_TYPE}-${PLATFORM_ARCH}
+}
+
+function set_node_version_as_current()
+{
+    NODE_VERSION_INSTALLED=$1
+    NODE_INSTALLED_PATH=$(node_install_path $NODE_VERSION_INSTALLED)
+
+    if [[ -e "$NODE_INSTALLED_PATH" ]]
+    then
+        rm $NODE_CURRENT_PATH 2>/dev/null
+        ln -s $NODE_INSTALLED_PATH $NODE_CURRENT_PATH
+    fi
+}
+
+function node_install_path()
+{
+    NODE_VERSION_TOINSTALL=$1
+    echo "$NODE_INSTALLER_HOME/node@$NODE_VERSION_TOINSTALL"
+}
+
+function get_inuse_node_version()
+{
+    readlink $NODE_CURRENT_PATH | awk -F '@' '{print $NF}'
+}
+
+function remove_node_version()
+{
+    NODE_VERSION_TOREMOVE=$1
+    NODE_VERSION_REMOVE_PATH=$(node_install_path $NODE_VERSION_TOREMOVE)
+
+    [[ "$NODE_VERSION_REMOVE_PATH" != "" ]] && rm -rf $NODE_VERSION_REMOVE_PATH
+}
+
+function show_help()
+{
+    echo "Usage:- "
+    echo "ndvm [install | update | remove | list | use | addpath | help] NODEVERSION"
+    echo "e.g."
+    echo "ndvm install v1.0.0"
+}
+
+#### INSTALL Action ####
+if [[ "$NODE_INSTALLER_ACTION" == "install" ]]
+then
+    if [[ "$NODE_VERSION" == "" ]]
+    then
+        NODE_VERSION=$(curl -s $NODE_RELEASE_URL | grep zipball_url | awk -F '/' '{print $NF}' | sed 's/\"//g' | sed 's/,//g')
+    fi
+
+    install_node $NODE_VERSION
+
+    # Ask to set currnt path
+    [[ -e "$(node_install_path $NODE_VERSION)" ]] && read -p "Do you want to set $NODE_VERSION as current version? (y/n)" confirm && [[ "$confirm" == [yY] ]] && set_node_version_as_current $NODE_VERSION
+
+#### UPDATE Action ####
+elif [[ "$NODE_INSTALLER_ACTION" == "update" ]]
+then
+    NODE_VERSION=$(curl -s $NODE_RELEASE_URL | grep zipball_url | awk -F '/' '{print $NF}' | sed 's/\"//g' | sed 's/,//g')
+    install_node $NODE_VERSION
+
+    set_node_version_as_current $NODE_VERSION
+
+#### LIST Action ####
+elif [[ "$NODE_INSTALLER_ACTION" == "list" ]]
+then
+    NODE_VERSION_LIST=$(ls $NODE_INSTALLER_HOME | grep 'node@' | awk -F '@' '{print $NF}')
+
+    CURRENT_INUSE_VERSION=$(get_inuse_node_version)
+
+    if [[ "$CURRENT_INUSE_VERSION" == "" ]]
+    then
+        echo """$NODE_VERSION_LIST""" | sort -r
+    else
+        echo """$NODE_VERSION_LIST""" | sort -r | sed "s/$CURRENT_INUSE_VERSION/-> $CURRENT_INUSE_VERSION/"
+    fi
+
+#### USE Action ####
+elif [[ "$NODE_INSTALLER_ACTION" == "use" ]]
+then
+    if [[ "$NODE_VERSION" == "" ]]
+    then
+        echo "Node version missing. Please provide Node version to use"
+        show_help
+    else
+        set_node_version_as_current $NODE_VERSION
+    fi
+
+#### REMOVE Action ####
+elif [[ "$NODE_INSTALLER_ACTION" == "remove" ]]
+then
+    if [[ "$NODE_VERSION" == "" ]]
+    then
+        echo "Node version missing. Please provide Node version to remove"
+        show_help
+    else
+        CURRENT_INUSE_VERSION=$(get_inuse_node_version)
+
+        if [[ "$CURRENT_INUSE_VERSION" == "$NODE_VERSION" ]]
+        then
+            read -p "You are trying to remove the inuse version of node. Continue? (y/n)" confirm && [[ "$confirm" == [yY] ]] && remove_node_version $NODE_VERSION
+        else
+            remove_node_version $NODE_VERSION
+        fi
+    fi
+
+#### Check Latest Version ####
+elif [[ "$NODE_INSTALLER_ACTION" == "check" ]]
+then
+    NODE_VERSION=$(curl -s $NODE_RELEASE_URL | grep zipball_url | awk -F '/' '{print $NF}' | sed 's/\"//g' | sed 's/,//g')
+    echo $NODE_VERSION
+
+#### ADDPATH Action ####
+elif [[ "$NODE_INSTALLER_ACTION" == "addpath" ]]
+then
+    NODE_BIN_PATH=${NODE_CURRENT_PATH}/bin
+
+    echo """Please add folling lines to your bashrc/zshrc to get the NODE in your path
+    export PATH=${NODE_BIN_PATH}:\${PATH}"""
+
+#### HELP Action ####
+elif [[ "$NODE_INSTALLER_ACTION" == "help" ]]
+then
+    show_help
+
+else
+    show_help
+fi

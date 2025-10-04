@@ -1,0 +1,20 @@
+#!/bin/bash
+
+message=$1
+
+function show_usage()
+{
+    echo "commitAndPush '<Commit Message>'"
+    echo "e.g. commitAndPush 'This is new commit'"
+}
+
+if [[ "$message" == "" ]]
+then
+    echo "Commit message missing.."
+    show_usage
+    echo
+    exit 1
+fi
+
+git add . && git commit -am "$message" && git push -f 
+echo

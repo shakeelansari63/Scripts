@@ -1,0 +1,44 @@
+name: freak-ollama
+networks:
+  default:
+    name: freak-ollama-net
+services:
+  ollama:
+    image: docker.io/ollama/ollama:latest
+    container_name: freak-ollama-ollama
+    environment:
+      OLLAMA_DEBUG: "1"
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/bash -c ':> /dev/tcp/127.0.0.1/11434'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "11434:11434"
+    volumes:
+      - /home/freak/Freak/System/DockerVolumes/OLLAMA:/root/.ollama
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: freak-open-webui
+    volumes:
+      - /home/freak/Freak/System/DockerVolumes/OPENWEBUI:/app/backend/data
+    ports:
+      - 53081:8080
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/bash -c ':> /dev/tcp/127.0.0.1/8080'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    environment:
+      OLLAMA_BASE_URL: 'http://ollama:11434'
+      WEBUI_SECRET_KEY: ''
+      ENABLE_SIGNUP: "False"
+      PORT: 8080
+      WEBUI_AUTH: "False"
+    restart: always
+    depends_on:
+      ollama:
+        condition: service_healthy

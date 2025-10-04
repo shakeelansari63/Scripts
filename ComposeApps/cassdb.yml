@@ -1,0 +1,23 @@
+name: freak-cassandra-db
+networks:
+  default:
+    name: freak-cassandra-net
+services:
+  cassandra:
+    image: docker.io/library/cassandra:latest
+    container_name: freak-cassandra
+    environment:
+      MAX_HEAP_SIZE: 1G
+      HEAP_NEWSIZE: 200M
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/bash -c ':> /dev/tcp/127.0.0.1/9042'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "7000:7000"
+      - "7001:7001"
+      - "9042:9042"
+    volumes:
+      - "/home/freak/Freak/System/DockerVolumes/Cassandra:/var/lib/cassandra"

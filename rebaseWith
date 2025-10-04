@@ -1,0 +1,93 @@
+#!/bin/bash
+
+rebasewith=$1
+
+function show_help()
+{
+    echo "rebaseWith [branchname]"
+    echo "e.g. rebaseWith main"
+}
+
+if [[ "$rebasewith" == "" ]]
+then
+    echo "Invalid Options..."
+    echo
+    show_help
+    exit 1
+fi
+
+current_branch=$(git branch --show-current)
+
+if [[ "$current_branch" == "" ]]
+then
+    echo "You are not under Git Control"
+    echo
+    show_help
+    exit 2
+fi
+
+if [[ "$current_branch" == "$rebasewith" ]]
+then
+    echo
+    echo "Cannot rebase with current branch"
+    echo "Current Branch: ${current_branch}"
+    echo "Branch to rebase with: ${rebasewith}"
+    exit 3
+fi
+
+# Check Status of Current Branch
+gitstatus=$(git status -s)
+if [[ $gitstatus != "" ]]
+then
+    echo "Cannot Rebase as there are uncommited changes in current branch"
+    echo "Changes: "
+    echo "${gitstatus}"
+    read -p "Do you want to discard the changes? (y/n): " discardchange
+    
+    if [[ "$discardchange" == "Y" ]] || [[ "$discardchange" == "y" ]]
+    then
+        echo "Discarding all uncommited changes."
+        while read line 
+        do
+            action=$(echo $line | awk '{print $1}')
+            file=$(echo $line | awk '{print $NF}')
+            
+            # Restore old files and delete new files            
+            if [[ "$action" == "??" ]]
+            then
+                rm -r $file
+            else
+                git restore $file
+            fi
+        done <<< "$gitstatus"
+    else
+        exit 4
+    fi
+fi
+
+echo
+
+# Rebase 
+echo "Rebasing Current Branch ${current_branch} with ${rebasewith}"
+echo
+
+echo "Checking Out ${rebasewith}"
+git checkout ${rebasewith}
+echo
+
+echo "Fetching Latest Details"
+git fetch -a && git pull
+echo
+
+echo "Checking Out feature Branch ${current_branch}"
+git checkout ${current_branch}
+echo
+
+echo "Rebasing with ${rebasewith}"
+git rebase ${rebasewith}
+echo
+
+echo "Pushing latest changes"
+git push
+echo
+

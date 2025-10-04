@@ -1,0 +1,150 @@
+#!/bin/bash
+
+DENO_INSTALLER='https://deno.land/install.sh'
+
+if [[ "$DENO_INSTALLER_HOME" == "" ]]
+then
+    DENO_INSTALLER_HOME="$HOME/.deno-manager"
+fi
+
+[ ! -e $DENO_INSTALLER_HOME ] && mkdir $DENO_INSTALLER_HOME
+
+DENO_CURRENT_PATH="$DENO_INSTALLER_HOME/current"
+DENO_RELEASE_URL="https://api.github.com/repos/denoland/deno/releases/latest"
+
+DENO_INSTALLER_ACTION=$1
+DENO_VERSION=$2
+
+#### Functions ####
+function install_deno()
+{
+    DENO_VERSION_TOINSTALL=$1
+    DENO_INSTALLER_PATH=$(deno_install_path $DENO_VERSION_TOINSTALL)
+
+    if [[ -e "$DENO_INSTALLER_PATH" ]]
+    then
+        echo "Deno version $DENO_VERSION_TOINSTALL is already installed"
+    else
+        echo "Installing Deno version $DENO_VERSION_TOINSTALL"
+
+        curl -fsSL $DENO_INSTALLER | DENO_INSTALL=$DENO_INSTALLER_PATH sh -s $DENO_VERSION_TOINSTALL
+    fi
+}
+
+function set_deno_version_as_latest()
+{
+    DENO_VERSION_INSTALLED=$1
+    DENO_INSTALLED_PATH=$(deno_install_path $DENO_VERSION_INSTALLED)
+
+    if [[ -e "$DENO_INSTALLED_PATH" ]]
+    then
+        rm $DENO_CURRENT_PATH 2>/dev/null
+        ln -s $DENO_INSTALLED_PATH $DENO_CURRENT_PATH
+    fi
+}
+
+function deno_install_path()
+{
+    DENO_VERSION_TOINSTALL=$1
+    echo "$DENO_INSTALLER_HOME/deno@$DENO_VERSION_TOINSTALL"
+}
+
+function get_inuse_deno_version()
+{
+    readlink $DENO_CURRENT_PATH | awk -F '@' '{print $NF}'
+}
+
+function remove_deno_version()
+{
+    DENO_VERSION_TOREMOVE=$1
+    DENO_VERSION_REMOVE_PATH=$(deno_install_path $DENO_VERSION_TOREMOVE)
+
+    [[ "$DENO_VERSION_REMOVE_PATH" != "" ]] && rm -rf $DENO_VERSION_REMOVE_PATH
+}
+
+function show_help()
+{
+    echo "Usage:- "
+    echo "dnvm [install | update | remove | list | use | addpath | help] DENOVERSION"
+    echo "e.g."
+    echo "dnvm install v1.0.0"
+}
+
+#### INSTALL Action ####
+if [[ "$DENO_INSTALLER_ACTION" == "install" ]]
+then
+    if [[ "$DENO_VERSION" == "" ]]
+    then
+        DENO_VERSION=$(curl -s $DENO_RELEASE_URL | grep zipball_url | awk -F '/' '{print $NF}' | sed 's/\"//g' | sed 's/,//g')
+    fi
+
+    install_deno $DENO_VERSION
+
+    # Ask to set currnt path
+    read -p "Do you want to set $DENO_VERSION as current version? (y/n)" confirm && [[ "$confirm" == [yY] ]] && set_deno_version_as_latest $DENO_VERSION
+
+#### UPDATE Action ####
+elif [[ "$DENO_INSTALLER_ACTION" == "update" ]]
+then
+    DENO_VERSION=$(curl -s $DENO_RELEASE_URL | grep zipball_url | awk -F '/' '{print $NF}' | sed 's/\"//g' | sed 's/,//g')
+    install_deno $DENO_VERSION
+
+    set_deno_version_as_latest $DENO_VERSION
+
+#### LIST Action ####
+elif [[ "$DENO_INSTALLER_ACTION" == "list" ]]
+then
+    DENO_VERSION_LIST=$(ls $DENO_INSTALLER_HOME | grep 'deno@' | awk -F '@' '{print $NF}')
+
+    CURRENT_INUSE_VERSION=$(get_inuse_deno_version)
+
+    echo """$DENO_VERSION_LIST""" | sort -r | sed "s/$CURRENT_INUSE_VERSION/-> $CURRENT_INUSE_VERSION/"
+
+#### USE Action ####
+elif [[ "$DENO_INSTALLER_ACTION" == "use" ]]
+then
+    if [[ "$DENO_VERSION" == "" ]]
+    then
+        echo "Deno version missing. Please provide Deno version to use"
+        show_help
+    else
+        set_deno_version_as_latest $DENO_VERSION
+    fi
+
+#### REMOVE Action ####
+elif [[ "$DENO_INSTALLER_ACTION" == "remove" ]]
+then
+    if [[ "$DENO_VERSION" == "" ]]
+    then
+        echo "Deno version missing. Please provide Deno version to remove"
+        show_help
+    else
+        CURRENT_INUSE_VERSION=$(get_inuse_deno_version)
+
+        if [[ "$CURRENT_INUSE_VERSION" == "$DENO_VERSION" ]]
+        then
+            read -p "You are trying to remove the inuse version of deno. Continue? (y/n)" confirm && [[ "$confirm" == [yY] ]] && remove_deno_version $DENO_VERSION
+        else
+            remove_deno_version $DENO_VERSION
+        fi
+    fi
+
+#### Check Latest Version ####
+elif [[ "$DENO_INSTALLER_ACTION" == "check" ]]
+then
+    DENO_VERSION=$(curl -s $DENO_RELEASE_URL | grep zipball_url | awk -F '/' '{print $NF}' | sed 's/\"//g' | sed 's/,//g')
+    echo $DENO_VERSION
+
+#### HELP Action ####
+elif [[ "$DENO_INSTALLER_ACTION" == "help" ]]
+then
+    show_help
+
+#### ADDPATH Action ####
+elif [[ "$DENO_INSTALLER_ACTION" == "addpath" ]]
+then
+    DENO_BIN_PATH=${DENO_CURRENT_PATH}/bin
+
+    echo """Please add folling lines to your bashrc/zshrc to get the DENO in your path
+    export PATH=${DENO_BIN_PATH}:\${PATH}"""
+fi

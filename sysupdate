@@ -1,0 +1,88 @@
+#!/bin/bash
+
+## Check for PARU in Arch Distro
+paruExist=$(which paru 2>/dev/null)
+yayExist=$(which yay 2>/dev/null)
+pacmanExist=$(which pacman 2>/dev/null)
+aptExist=$(which apt 2>/dev/null)
+dnfExist=$(which dnf 2>/dev/null)
+eopkgExist=$(which eopkg 2>/dev/null)
+zypperExist=$(which zypper 2>/dev/null)
+
+if [ "$paruExist" != "" ]
+then
+	echo ""
+	echo "#### System update via PARU ####"
+	echo ""
+	paru -Syyu && paru -c
+elif [ "$yayExist" != "" ]
+then
+	echo ""
+	echo "#### System update via YAY ####"
+	echo ""
+	yay -Syyu && yay -c
+elif [ "$pacmanExist" != "" ]
+then
+	echo ""
+	echo "#### System update via PACMAN ####"
+	echo ""
+	sudo pacman -Syyu && sudo pacman -Rs $(pacman -Qqtd)
+elif [ "$aptExist" != "" ]
+then
+	echo ""
+	echo "#### System update via APT ####"
+	echo ""
+	sudo apt update && sudo apt full-upgrade 
+elif [ "$dnfExist" != "" ]
+then
+	echo ""
+	echo "#### System update via DNF ####"
+	echo ""
+	sudo dnf upgrade --refresh && sudo dnf autoremove
+elif [ "$eopkgExist" != "" ]
+then
+	echo ""
+	echo "#### System update via EOPKG ####"
+	echo ""
+	sudo eopkg upgrade && sudo eopkg remove-orphans
+elif [ "$zypperExist" != "" ]
+then
+	echo ""
+	echo "#### System update via ZYPPER ####"
+	echo ""
+	sudo ZYPP_MEDIANETWORK=1 zypper ref && sudo ZYPP_MEDIANETWORK=1 zypper dup -yl --no-recommends --allow-vendor-change
+	unneededPackages=$(sudo zypper pa --unneeded | grep '^i' | cut -d '|' -f 3 | tr -d '\t' | tr -d ' ' | tr '\n' ' ')
+	if [ "$unneededPackages" != "" ]
+	then
+		echo "Removing Following Unneeded Packages - $unneededPackages"
+		read -p "Continue? (y/n) " confirmClean
+		[[ "$confirmClean" == [yY] ]] && sudo ZYPP_MEDIANETWORK=1 zypper rm --clean-deps $unneededPackages
+	fi
+
+else
+	echo "Distro not supported yet"
+fi
+
+## Generic package managers
+# FlatPak
+flatpakExist=$(which flatpak 2>/dev/null)
+
+if [ "$flatpakExist" != "" ]
+then
+	echo ""
+	echo "#### Run Flatpak Update ####"
+	echo ""
+	flatpak update -y
+	flatpak remove --unused
+fi
+
+# Snap
+snapExist=$(which snap 2>/dev/null)
+
+if [ "$snapExist" != "" ]
+then
+	echo ""
+	echo "#### Run Snap Update ####"
+	echo ""
+	sudo snap refresh
+fi

@@ -1,0 +1,69 @@
+#!/bin/bash
+
+BASE_DIR="${DEV_MOUNT_POINT}"
+if [[ "$BASE_DIR" == "" ]]
+then
+    echo "ENV Variable DEV_MOUNT_POINT. "
+    exit 1
+fi
+
+HOME_DIR=${BASE_DIR}/Home
+NOTE_DIR=${BASE_DIR}/Notes
+APIS_DIR=${BASE_DIR}/API-Collections
+TRNG_DIR=${BASE_DIR}/Trainings
+WLPR_DIR=${BASE_DIR}/Wallpapers
+PRJT_DIR=${BASE_DIR}/Projects
+
+HOME_REPO='git@github.com:shakeelansari63/Home.git'
+NOTE_REPO='git@github.com:shakeelansari63/Notes.git'
+APIS_REPO='git@github.com:shakeelansari63/api-collections.git'
+TRNG_REPO='git@github.com:shakeelansari63/Training.git'
+WLPR_REPO='git@github.com:shakeelansari63/Wallpapers.git'
+
+echo -e "\033[0;35m> Cloning Home Repo ------------------> \033[0m"
+if [[ ! -d $HOME_DIR ]]
+then
+    git clone $HOME_REPO $HOME_DIR
+else
+    echo -e "\033[0;31m>> ! Home Already Exist \033[0m"
+fi
+
+echo -e "\033[0;35m> Cloning Notes Repo -----------------> \033[0m"
+if [[ ! -d $NOTE_DIR ]]
+then
+    git clone $NOTE_REPO $NOTE_DIR
+else
+    echo -e "\033[0;31m>> ! Notes Already Exist \033[0m"
+fi
+
+echo -e "\033[0;35m> Cloning APIs Repo ------------------> \033[0m"
+if [[ ! -d $APIS_DIR ]]
+then
+    git clone $APIS_REPO $APIS_DIR
+else
+    echo -e "\033[0;31m>> ! Apis Already Exist \033[0m"
+fi
+
+echo -e "\033[0;35m> Cloning Training Repo --------------> \033[0m"
+if [[ ! -d $TRNG_DIR ]]
+then
+    git clone $TRNG_REPO $TRNG_DIR
+else
+    echo -e "\033[0;31m>> ! Training Already Exist \033[0m"
+fi
+
+echo -e "\033[0;35m> Cloning Wallpaper Repo -------------> \033[0m"
+if [[ ! -d $WLPR_DIR ]]
+then
+    git clone $WLPR_REPO $WLPR_DIR
+else
+    echo -e "\033[0;31m>> ! Wallpaper Already Exist \033[0m"
+fi
+
+echo -e "\033[0;35m> Creating Projects Directory --------> \033[0m"
+if [[ ! -d $PRJT_DIR ]]
+then
+    mkdir $PRJT_DIR
+else
+    echo -e "\033[0;31m>> ! Projects Already Exist \033[0m"
+fi

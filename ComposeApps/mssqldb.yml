@@ -1,0 +1,21 @@
+name: freak-mssqldb
+networks:
+  default:
+    name: freak-mssqldb-net
+services:
+  mssql-db:
+    image: mcr.microsoft.com/mssql/server:latest
+    container_name: freak-mssql-db
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: Freak!123
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/bash -c ':> /dev/tcp/127.0.0.1/1433'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "1433:1433"
+    volumes:
+      - "/home/freak/Freak/System/DockerVolumes/MSSQL:/var/opt/mssql/data"

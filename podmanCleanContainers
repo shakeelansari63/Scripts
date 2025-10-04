@@ -1,0 +1,18 @@
+#!/bin/bash
+if [[ "$(which podman 2>/dev/null)" == "" ]]
+then
+    echo "Podman Command Not found"
+    exit 1
+fi
+
+podmanContainers=$(podman ps -aq)
+
+if [[ "$podmanContainers" == "" ]]
+then
+    echo "No running Containers"
+    exit 1
+fi
+
+echo "Clening Podman containers - ${podmanContainers}"
+podman rm ${podmanContainers}
+

@@ -1,0 +1,7 @@
+#!/bin/bash
+MAIN_BRANCH=$(git branch -l master main)
+LD_SPACES_TRIMMED="${MAIN_BRANCH## }"
+TR_SPACES_TRIMMED="${LD_SPACES_TRIMMED%% }"
+
+BASE_BRANCH="${TR_SPACES_TRIMMED}"
+rebaseWith ${BASE_BRANCH}

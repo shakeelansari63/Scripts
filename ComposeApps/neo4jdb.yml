@@ -1,0 +1,21 @@
+name: freak-neo4jdb
+networks:
+  default:
+    name: freak-neo4jdb-net
+services:
+  neo4j-db:
+    image: docker.io/library/neo4j:latest
+    container_name: freak-neo4j-db
+    environment:
+      NEO4J_AUTH: none
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/bash -c ':> /dev/tcp/127.0.0.1/7687'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - "/home/freak/Freak/System/DockerVolumes/NEO4J:/data"

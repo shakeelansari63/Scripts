@@ -1,0 +1,26 @@
+name: freak-stirling-pdf
+networks:
+  default:
+    name: freak-stirling-net
+services:
+  stirling-pdf:
+    image: docker.io/stirlingtools/stirling-pdf:latest
+    container_name: freak-stirling-pdf
+    environment:
+      DISABLE_ADDITIONAL_FEATURES: true
+      LANGS: en_GB
+      UI_APPNAME: Freak's Stirling PDF
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/bash -c ':> /dev/tcp/127.0.0.1/8080'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "53082:8080"
+    volumes:
+      - "/home/freak/Freak/System/DockerVolumes/StirlingPDF/trainingData:/usr/share/tessdata"
+      - "/home/freak/Freak/System/DockerVolumes/StirlingPDF/extraConfigs:/configs"
+      - "/home/freak/Freak/System/DockerVolumes/StirlingPDF/customFiles:/customFiles/"
+      - "/home/freak/Freak/System/DockerVolumes/StirlingPDF/logs:/logs/"
+      - "/home/freak/Freak/System/DockerVolumes/StirlingPDF/pipeline:/pipeline/"

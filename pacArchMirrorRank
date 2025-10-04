@@ -1,0 +1,42 @@
+#!/bin/bash
+
+## Make temporary mirri file
+TEMP_MIRROR_FILE=$(mktemp)
+TEMP_TARGET_MIRROR_FILE=$(mktemp)
+
+## Target Mirror File
+TARGET_MIRROR=$1
+
+if [[ "$TARGET_MIRROR" == "" ]]
+then
+    TARGET_MIRROR="/etc/pacman.d/mirrorlist"
+fi
+
+echo "Target Mirror File ${TARGET_MIRROR} will be updated"
+
+# delete file if already exist
+[[ -f $TEMP_MIRROR_FILE ]] && rm $TEMP_MIRROR_FILE
+
+## Get latest Mirrorlist
+#wget -O $TEMP_MIRROR_FILE 'https://archlinux.org/mirrorlist/?country=all&protocol=http&protocol=https&ip_version=4'
+wget -O $TEMP_MIRROR_FILE 'https://archlinux.org/mirrorlist/?country=AU&country=BD&country=DK&country=GR&country=HK&country=IN&country=ID&country=JP&country=NZ&country=PK&country=SG&country=KR&country=CH&country=TW&country=TH&country=GB&country=VN&protocol=http&protocol=https&ip_version=4'
+
+## Uncomment Mirrors
+sed -ie 's/#S/S/g' $TEMP_MIRROR_FILE
+
+## Rank mirrors and write mirrors in temp file
+rankmirrors -n 10 $TEMP_MIRROR_FILE | tee $TEMP_TARGET_MIRROR_FILE
+
+## Try to write target mirror file
+(cat $TEMP_TARGET_MIRROR_FILE > $TARGET_MIRROR) 2>/dev/null
+
+## If above command fail, try with sudo
+if [[ $? -ne 0 ]]
+then
+    echo "Need root privilege to update target mirror file - ${TARGET_MIRROR}"
+    sudo cat $TEMP_TARGET_MIRROR_FILE | sudo tee $TARGET_MIRROR > /dev/null
+fi
+
+## Delete temp file
+[[ -f $TEMP_MIRROR_FILE ]] && rm $TEMP_MIRROR_FILE
+[[ -f $TEMP_TARGET_MIRROR_FILE ]] && rm $TEMP_TARGET_MIRROR_FILE
