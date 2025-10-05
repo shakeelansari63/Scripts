@@ -157,6 +157,7 @@ def get_all_compose_app_services(app: str) -> list[str]:
 def start_compose_app(app: str) -> None:
     check_and_start_daemon()
     print(f"Starting App {app} ...")
+
     rc = run_bash_command_with_output_stream(
         f"{COMPOSE_ORCHESTRATOR} compose -f {COMPOSE_APPS[app]} up -d --wait"
     )
@@ -169,9 +170,10 @@ def start_compose_app(app: str) -> None:
 def stop_compose_app(app: str) -> None:
     print(f"Stopping App {app} ...")
     run_bash_command_with_output_stream(f"{COMPOSE_ORCHESTRATOR} compose -f {COMPOSE_APPS[app]} down")
-    # Optionally stop Docker daemon if no containers are running
+    # Stop Docker daemon if no containers are running
     rc, output = run_bash_command(f"{COMPOSE_ORCHESTRATOR} ps -q")
-    if rc == 0 and output.strip() == "":
+
+    if rc == 0 and output.strip() == "" and COMPOSE_ORCHESTRATOR == "docker":
         print("No running containers found. Stopping Docker daemon ...")
         run_bash_command_with_output_stream(DOCKER_STOP_CMD)
 

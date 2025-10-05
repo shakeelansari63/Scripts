@@ -18,4 +18,4 @@ services:
     ports:
       - "1433:1433"
     volumes:
-      - "/home/freak/Freak/System/DockerVolumes/MSSQL:/var/opt/mssql/data"
+      - "${DEV_MOUNT_POINT}/System/DockerVolumes/MSSQL:/var/opt/mssql/data"

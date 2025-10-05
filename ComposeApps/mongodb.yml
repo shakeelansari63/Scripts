@@ -18,4 +18,4 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - "/home/freak/Freak/System/DockerVolumes/MongoDB:/data/db"
+      - "${DEV_MOUNT_POINT}/System/DockerVolumes/MongoDB:/data/db"

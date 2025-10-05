@@ -19,8 +19,8 @@ services:
     ports:
       - "53082:8080"
     volumes:
-      - "/home/freak/Freak/System/DockerVolumes/StirlingPDF/trainingData:/usr/share/tessdata"
-      - "/home/freak/Freak/System/DockerVolumes/StirlingPDF/extraConfigs:/configs"
-      - "/home/freak/Freak/System/DockerVolumes/StirlingPDF/customFiles:/customFiles/"
-      - "/home/freak/Freak/System/DockerVolumes/StirlingPDF/logs:/logs/"
-      - "/home/freak/Freak/System/DockerVolumes/StirlingPDF/pipeline:/pipeline/"
+      - "${DEV_MOUNT_POINT}/System/DockerVolumes/StirlingPDF/trainingData:/usr/share/tessdata"
+      - "${DEV_MOUNT_POINT}/System/DockerVolumes/StirlingPDF/extraConfigs:/configs"
+      - "${DEV_MOUNT_POINT}/System/DockerVolumes/StirlingPDF/customFiles:/customFiles/"
+      - "${DEV_MOUNT_POINT}/System/DockerVolumes/StirlingPDF/logs:/logs/"
+      - "${DEV_MOUNT_POINT}/System/DockerVolumes/StirlingPDF/pipeline:/pipeline/"

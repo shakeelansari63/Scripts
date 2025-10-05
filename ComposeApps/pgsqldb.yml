@@ -18,4 +18,4 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - "/home/freak/Freak/System/DockerVolumes/PostgreSQL:/var/lib/postgresql/data"
+      - "${DEV_MOUNT_POINT}/System/DockerVolumes/PostgreSQL:/var/lib/postgresql/data"

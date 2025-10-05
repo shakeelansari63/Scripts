@@ -17,13 +17,13 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - /home/freak/Freak/System/DockerVolumes/OLLAMA:/root/.ollama
+      - ${DEV_MOUNT_POINT}/System/DockerVolumes/OLLAMA:/root/.ollama
 
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: freak-open-webui
     volumes:
-      - /home/freak/Freak/System/DockerVolumes/OPENWEBUI:/app/backend/data
+      - ${DEV_MOUNT_POINT}/System/DockerVolumes/OPENWEBUI:/app/backend/data
     ports:
       - 53081:8080
     healthcheck:

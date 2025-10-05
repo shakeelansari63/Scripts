@@ -18,6 +18,6 @@ services:
     ports:
       - "53083:8888"
     volumes:
-      - "/home/freak/Freak/System/DockerVolumes/PySpark:/home/jovyan/work"
-      - "/home/freak/Trainings/PYSPARK/:/home/jovyan/PySparkTraining"
+      - "${DEV_MOUNT_POINT}/System/DockerVolumes/PySpark:/home/jovyan/work"
+      - "${DEV_MOUNT_POINT}/Trainings/PYSPARK/:/home/jovyan/PySparkTraining"
       - "${PWD}:/home/jovyan/CurrentProject"
