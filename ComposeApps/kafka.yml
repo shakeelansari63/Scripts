@@ -1,3 +1,7 @@
+name: freak-kafka
+networks:
+  default:
+    name: freak-kafka-net
 services:
   kafka:
     image: docker.io/confluentinc/cp-kafka:latest
