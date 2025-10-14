@@ -18,4 +18,4 @@ services:
       - "7474:7474"
       - "7687:7687"
     volumes:
-      - "${DEV_MOUNT_POINT}/System/DockerVolumes/NEO4J:/data"
+      - "${DEV_MOUNT_POINT}/System/ContainerVolumes/NEO4J:/data"

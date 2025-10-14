@@ -18,4 +18,4 @@ services:
     ports:
       - "1433:1433"
     volumes:
-      - "${DEV_MOUNT_POINT}/System/DockerVolumes/MSSQL:/var/opt/mssql/data"
+      - "${DEV_MOUNT_POINT}/System/ContainerVolumes/MSSQL:/var/opt/mssql/data"

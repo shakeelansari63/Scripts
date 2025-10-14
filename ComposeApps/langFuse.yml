@@ -80,8 +80,8 @@ services:
       CLICKHOUSE_USER: clickhouse
       CLICKHOUSE_PASSWORD: clickhouse # CHANGEME
     #volumes:
-    #  - ${DEV_MOUNT_POINT}/System/DockerVolumes/LANGFUSE/CLICKHOUSE/DATA:/var/lib/clickhouse
-    #  - ${DEV_MOUNT_POINT}/System/DockerVolumes/LANGFUSE/CLICKHOUSE/LOGS:/var/log/clickhouse-server
+    #  - ${DEV_MOUNT_POINT}/System/ContainerVolumes/LANGFUSE/CLICKHOUSE/DATA:/var/lib/clickhouse
+    #  - ${DEV_MOUNT_POINT}/System/ContainerVolumes/LANGFUSE/CLICKHOUSE/LOGS:/var/log/clickhouse-server
     expose:
       - 8123
       - 9000
@@ -105,7 +105,7 @@ services:
     expose:
       - 9001
     volumes:
-      - ${DEV_MOUNT_POINT}/System/DockerVolumes/LANGFUSE/MINIO:/data
+      - ${DEV_MOUNT_POINT}/System/ContainerVolumes/LANGFUSE/MINIO:/data
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 1s
@@ -143,4 +143,4 @@ services:
     expose:
       - 5432
     #volumes:
-    #  - ${DEV_MOUNT_POINT}/System/DockerVolumes/LANGFUSE/POSTGRES:/var/lib/postgresql/data
+    #  - ${DEV_MOUNT_POINT}/System/ContainerVolumes/LANGFUSE/POSTGRES:/var/lib/postgresql/data

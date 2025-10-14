@@ -20,4 +20,4 @@ services:
       - "7001:7001"
       - "9042:9042"
     volumes:
-      - "${DEV_MOUNT_POINT}/System/DockerVolumes/Cassandra:/var/lib/cassandra"
+      - "${DEV_MOUNT_POINT}/System/ContainerVolumes/Cassandra:/var/lib/cassandra"

@@ -16,7 +16,7 @@ x-airflow-common:
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
     AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
   volumes:
-    - ${DEV_MOUNT_POINT}/System/DockerVolumes/AIRFLOW:/opt/airflow
+    - ${DEV_MOUNT_POINT}/System/ContainerVolumes/AIRFLOW:/opt/airflow
     - ${DEV_MOUNT_POINT}/Trainings/AIRFLOW/dags:/opt/airflow/dags
     - ${DEV_MOUNT_POINT}/Trainings/AIRFLOW/plugins:/opt/airflow/plugins
   depends_on:

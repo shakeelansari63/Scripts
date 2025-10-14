@@ -26,4 +26,4 @@ services:
     ports:
       - "9092:9092"
     volumes:
-      - ${DEV_MOUNT_POINT}/System/DockerVolumes/KAFKA:/var/lib/kafka/data
+      - ${DEV_MOUNT_POINT}/System/ContainerVolumes/KAFKA:/var/lib/kafka/data
