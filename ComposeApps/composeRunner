@@ -8,6 +8,7 @@ from typing import Tuple
 import time
 import json
 
+
 ### Functions to run bash command
 def run_bash_command(cmd: str) -> Tuple[int, str]:
     # Run Command and capture the output in variable
@@ -18,6 +19,7 @@ def run_bash_command(cmd: str) -> Tuple[int, str]:
 
     # Return Command RC and Output
     return (result.returncode, output)
+
 
 def run_bash_command_with_output_stream(cmd: str) -> int:
     proc = subprocess.Popen(
@@ -34,6 +36,7 @@ def run_bash_command_with_output_stream(cmd: str) -> int:
     # Return Command RC
     return proc.returncode
 
+
 # Compose Orchestrator
 # This can be set to Docker or Podman
 # Check if Compose Orchestrator ENV variable is set, yes then use it
@@ -41,13 +44,13 @@ COMPOSE_ORCHESTRATOR = os.getenv("COMPOSE_ORCHESTRATOR", "")
 
 # If ENV Variable is not set, then try to find either docker or podman
 if COMPOSE_ORCHESTRATOR == "":
-    rc, _ = run_bash_command('type podman')
+    rc, _ = run_bash_command("type podman")
 
     if rc == 0:
-        COMPOSE_ORCHESTRATOR = 'podman'
+        COMPOSE_ORCHESTRATOR = "podman"
 
     else:
-        COMPOSE_ORCHESTRATOR = 'docker'
+        COMPOSE_ORCHESTRATOR = "docker"
 
 # Command to check if Docker daemon is running
 DOCKER_CHECK_CMD = f"{COMPOSE_ORCHESTRATOR} info > /dev/null 2>&1"
@@ -97,7 +100,63 @@ DEFAULT_ACTION: dict[str, str] = {
     "--help": "Show the app help",
 }
 
+EXTRA_ACTION: dict[str, dict[str, str]] = dict({})
+EXTRA_CMD_ANNOTATION_PREFIX: str = "extracmd-"
+EXTRA_CMDDESC_ANNOTATION_PREFIX: str = "extracmddesc-"
+
 RUNNER_NAME = sys.argv[0].replace(str(APP_YAML_PATH), "").replace(os.sep, "")
+
+
+# Generate List of additional supported actions for app through yaml annotations
+def build_extra_actions_for_app(app: str) -> None:
+    rc, json_config = run_bash_command(
+        f"{COMPOSE_ORCHESTRATOR} compose -f {COMPOSE_APPS[app]} config --format json"
+    )
+
+    # Check if command was successful
+    if rc != 0:
+        return
+
+    # Read Json config and get extra command details for each service
+    config = json.loads(json_config)
+
+    # Validate if services are defined
+    if "services" not in config.keys() or len(config.get("services").keys()) == 0:
+        return
+
+    # If services are defined, loop over servcie and read extra command info from annotations
+    for service_name, service_detail in config.get("services").items():
+        # Check if annotations exist in service
+        if service_detail.get("annotations") is None:
+            continue
+
+        # Extra Command Annotations
+        extra_command_info = {
+            annonkey.replace(EXTRA_CMD_ANNOTATION_PREFIX, ""): annonval
+            for annonkey, annonval in service_detail.get("annotations").items()
+            if annonkey.startswith(EXTRA_CMD_ANNOTATION_PREFIX)
+        }
+
+        # Check if any extra command info found
+        if len(extra_command_info) == 0:
+            continue
+
+        extra_command_desc = {
+            annonkey.replace(EXTRA_CMDDESC_ANNOTATION_PREFIX, ""): annonval
+            for annonkey, annonval in service_detail.get("annotations").items()
+            if annonkey.startswith(EXTRA_CMDDESC_ANNOTATION_PREFIX)
+        }
+
+        # Extract Command details and descriptions
+        for cmd_name, cmd in extra_command_info.items():
+            cmd_desc = extra_command_desc.get(cmd_name, None)
+            EXTRA_ACTION[cmd_name] = {
+                "service": service_name,
+                "command": cmd,
+                "description": cmd_desc
+                if cmd_desc is not None
+                else f"Run Command - {cmd} in {service_name} service",
+            }
 
 
 def check_docker_daemon_running() -> bool:
@@ -130,9 +189,17 @@ def show_compose_runner_help() -> None:
 
 def show_compose_app_help(app: str) -> None:
     print("Valid Options are")
-    print(f"{app} [ {' | '.join(DEFAULT_ACTION.keys())} ]")
+    print(
+        f"{app} [ {' | '.join(list(DEFAULT_ACTION.keys()) + list(EXTRA_ACTION.keys()))} ]"
+    )
     print("-" * 80)
+    # Display Common actions
     for action, action_description in DEFAULT_ACTION.items():
+        print(f"{action:>15} : {action_description:<23}")
+
+    # Display additional actions for app
+    for action, action_info in EXTRA_ACTION.items():
+        action_description = action_info.get("description")
         print(f"{action:>15} : {action_description:<23}")
 
 
@@ -156,6 +223,13 @@ def get_all_compose_app_services(app: str) -> list[str]:
 
 def start_compose_app(app: str) -> None:
     check_and_start_daemon()
+
+    # Check if app is already running
+    if check_compose_app_status(app):
+        print(f"App {app} is already running...")
+        return
+
+    # Start app
     print(f"Starting App {app} ...")
 
     rc = run_bash_command_with_output_stream(
@@ -168,8 +242,15 @@ def start_compose_app(app: str) -> None:
 
 
 def stop_compose_app(app: str) -> None:
+    # Check if app is running or not
+    if not check_compose_app_status(app):
+        print(f"App {app} is not running...")
+        return
+
     print(f"Stopping App {app} ...")
-    run_bash_command_with_output_stream(f"{COMPOSE_ORCHESTRATOR} compose -f {COMPOSE_APPS[app]} down")
+    run_bash_command_with_output_stream(
+        f"{COMPOSE_ORCHESTRATOR} compose -f {COMPOSE_APPS[app]} down"
+    )
     # Stop Docker daemon if no containers are running
     rc, output = run_bash_command(f"{COMPOSE_ORCHESTRATOR} ps -q")
 
@@ -179,6 +260,12 @@ def stop_compose_app(app: str) -> None:
 
 
 def restart_compose_app(app: str) -> None:
+    # Check if app is running or not
+    if not check_compose_app_status(app):
+        print(f"App {app} was not running...")
+        start_compose_app(app)
+        return
+
     print(f"Restarting App {app} ...")
     run_bash_command_with_output_stream(
         f"{COMPOSE_ORCHESTRATOR} compose -f {COMPOSE_APPS[app]} restart"
@@ -186,6 +273,11 @@ def restart_compose_app(app: str) -> None:
 
 
 def show_compose_app_logs(app: str) -> None:
+    # Check if app is running or not
+    if not check_compose_app_status(app):
+        print(f"App {app} is not running...")
+        return
+
     # Get all services for the app
     services = get_all_compose_app_services(app)
 
@@ -225,10 +317,17 @@ def show_compose_app_logs(app: str) -> None:
         )
         return
 
-    run_bash_command_with_output_stream(f"{COMPOSE_ORCHESTRATOR} compose -f {COMPOSE_APPS[app]} logs")
+    run_bash_command_with_output_stream(
+        f"{COMPOSE_ORCHESTRATOR} compose -f {COMPOSE_APPS[app]} logs"
+    )
 
 
 def ssh_into_compose_app_container(app: str) -> None:
+    # Check if app is running or not
+    if not check_compose_app_status(app):
+        print(f"App {app} is not running...")
+        return
+
     # Get all running services for the app
     services = get_running_compose_app_services(app)
 
@@ -267,19 +366,20 @@ def ssh_into_compose_app_container(app: str) -> None:
 
 
 def show_compose_app_usage(app: str) -> None:
+    # Check if app is running or not
+    if not check_compose_app_status(app):
+        print(f"App {app} is not running...")
+        return
+
     run_bash_command_with_output_stream(
         f"{COMPOSE_ORCHESTRATOR} compose -f {COMPOSE_APPS[app]} stats --no-stream"
     )
 
 
-def show_compose_app_status(app: str) -> None:
-    # Caputalize First Letter of App for better output
-    app_name = app[0].upper() + app[1:]
-
+def check_compose_app_status(app: str) -> bool:
     # Check if Docker daemon is running
     if not check_docker_daemon_running():
-        print(f"{app_name} is not running ...")
-        return
+        return False
 
     # Get Running Containers for app
     rc, running_containers = run_bash_command(
@@ -288,16 +388,28 @@ def show_compose_app_status(app: str) -> None:
 
     # If any of the commands failed
     if rc != 0:
-        print(f"{app_name} is not running ...")
-        return
+        return False
 
     # If no container running
     if running_containers.strip() == "0":
-        print(f"{app_name} is not running ...")
-        return
+        return False
 
     # If all checks passed, app is running
-    print(f"{app_name} is running ...")
+    return True
+
+
+def show_compose_app_status(app: str) -> None:
+    # Caputalize First Letter of App for better output
+    app_name = app[0].upper() + app[1:]
+
+    # Check Status
+    status = check_compose_app_status(app)
+
+    if status:
+        print(f"{app_name} is running ...")
+        return
+
+    print(f"{app_name} is not running ...")
 
 
 def provide_connectivity_info(app: str) -> None:
@@ -359,6 +471,11 @@ def provide_connectivity_info(app: str) -> None:
 
         print("-" * 80)
 
+    # At the end show message if app is not running
+    if not check_compose_app_status(app):
+        print(f"Note: {app} is not running. Start the app to access...")
+        return
+
 
 def get_list_of_all_running_apps() -> list[str]:
     # No app will be running if Docker daemon is not running
@@ -366,7 +483,9 @@ def get_list_of_all_running_apps() -> list[str]:
         return []
 
     # List Compose running apps
-    rc, running_apps_list = run_bash_command(f"{COMPOSE_ORCHESTRATOR} compose ls --format json")
+    rc, running_apps_list = run_bash_command(
+        f"{COMPOSE_ORCHESTRATOR} compose ls --format json"
+    )
 
     # Check if any app is running
     if rc != 0 or running_apps_list.strip() == "":
@@ -438,6 +557,35 @@ def select_and_stop_app() -> None:
     stop_compose_app(running_apps[option - 1])
 
 
+def run_app_extra_action(app: str, action: str, extra_args: str) -> None:
+    # Check if app is running or not
+    if not check_compose_app_status(app):
+        print(f"App {app} is not running...")
+        return
+
+    # Run extra action
+    action_detail = EXTRA_ACTION.get(action)
+
+    if action_detail is None:
+        return
+
+    # Get Service name and command
+    service = action_detail.get("service")
+    action_cmd = action_detail.get("command")
+
+    # If Service name of command not found, return
+    if service is None or action_cmd is None:
+        return
+
+    # Fill Extra args in command
+    action_cmd = action_cmd.replace("{##}", extra_args)
+
+    # Run command on service
+    run_bash_command_with_output_stream(
+        f"{COMPOSE_ORCHESTRATOR} compose -f {COMPOSE_APPS[app]} exec {service} {action_cmd}"
+    )
+
+
 def run_app_action(app: str, action: str, extra_args: str) -> None:
     # Help Action
     if action == "--help":
@@ -474,6 +622,10 @@ def run_app_action(app: str, action: str, extra_args: str) -> None:
     # Provide Connectivity Info of Compose App
     elif action == "connect":
         provide_connectivity_info(app)
+
+    # Run extra actions
+    elif action in EXTRA_ACTION.keys():
+        run_app_extra_action(app, action, extra_args)
 
 
 def run_compose_runner_action(app: str) -> None:
@@ -519,9 +671,12 @@ def main():
         show_compose_app_help(APP_NAME)
         sys.exit(1)
 
+    # Build Extra action for app
+    build_extra_actions_for_app(APP_NAME)
+
     # Check if Action is valid
     ACTION_NAME = sys.argv[2]
-    if ACTION_NAME not in DEFAULT_ACTION.keys():
+    if ACTION_NAME not in list(DEFAULT_ACTION.keys()) + list(EXTRA_ACTION.keys()):
         print(f"Invalid Action for App {APP_NAME} ...")
         show_compose_app_help(APP_NAME)
         sys.exit(1)

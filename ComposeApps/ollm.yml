@@ -3,7 +3,19 @@ networks:
   default:
     name: freak-ollama-net
 services:
+  # Add extra commands which can be run on this service through compose app runner
   ollama:
+    annotations:
+      extracmd-pull: ollama pull {##}
+      extracmddesc-pull: Pull a model from Ollama registry
+      extracmd-list: ollama list
+      extracmddesc-list: List available models
+      extracmd-ps: ollama ps
+      extracmddesc-ps: List running models
+      extracmd-kill: ollama stop {##}
+      extracmddesc-kill: Kill a running model
+      extracmd-run: ollama run {##}
+      extracmddesc-run: Run and Model and start chat
     image: docker.io/ollama/ollama:latest
     container_name: freak-ollama-ollama
     environment:
@@ -33,8 +45,8 @@ services:
       retries: 5
       start_period: 30s
     environment:
-      OLLAMA_BASE_URL: 'http://ollama:11434'
-      WEBUI_SECRET_KEY: ''
+      OLLAMA_BASE_URL: "http://ollama:11434"
+      WEBUI_SECRET_KEY: ""
       ENABLE_SIGNUP: "False"
       PORT: 8080
       WEBUI_AUTH: "False"
