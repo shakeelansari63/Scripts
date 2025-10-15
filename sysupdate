@@ -9,6 +9,9 @@ dnfExist=$(which dnf 2>/dev/null)
 eopkgExist=$(which eopkg 2>/dev/null)
 zypperExist=$(which zypper 2>/dev/null)
 
+# Is Root
+USERID=$(id -u)
+
 if [ "$paruExist" != "" ]
 then
 	echo ""
@@ -26,38 +29,88 @@ then
 	echo ""
 	echo "#### System update via PACMAN ####"
 	echo ""
-	sudo pacman -Syyu && sudo pacman -Rs $(pacman -Qqtd)
+	# For Root
+	if [[ $USERID -eq 0 ]]
+	then
+		pacman -Syyu && pacman -Rs $(pacman -Qqtd)
+	
+	# For Non root use Sudo
+	else
+		sudo pacman -Syyu && sudo pacman -Rs $(pacman -Qqtd)
+	fi
 elif [ "$aptExist" != "" ]
 then
 	echo ""
 	echo "#### System update via APT ####"
 	echo ""
-	sudo apt update && sudo apt full-upgrade 
+	# For Root
+	if [[ $USERID -eq 0 ]]
+	then
+		apt update && apt full-upgrade 
+
+	# For Non root use Sudo
+	else
+		sudo apt update && sudo apt full-upgrade 
+	fi
 elif [ "$dnfExist" != "" ]
 then
 	echo ""
 	echo "#### System update via DNF ####"
 	echo ""
-	sudo dnf upgrade --refresh && sudo dnf autoremove
+	# For Root
+	if [[ $USERID -eq 0 ]]
+	then
+		dnf upgrade --refresh && dnf autoremove
+
+	# For Non root use Sudo
+	else
+		sudo dnf upgrade --refresh && sudo dnf autoremove
+	fi
+		
 elif [ "$eopkgExist" != "" ]
 then
 	echo ""
 	echo "#### System update via EOPKG ####"
 	echo ""
-	sudo eopkg upgrade && sudo eopkg remove-orphans
+	# For Root
+	if [[ $USERID -eq 0 ]]
+	then
+		eopkg upgrade && eopkg remove-orphans
+
+	# For Non root use Sudo
+	else
+		sudo eopkg upgrade && sudo eopkg remove-orphans
+	fi
+		
 elif [ "$zypperExist" != "" ]
 then
 	echo ""
 	echo "#### System update via ZYPPER ####"
 	echo ""
-	sudo ZYPP_MEDIANETWORK=1 zypper ref && sudo ZYPP_MEDIANETWORK=1 zypper dup -yl --no-recommends --allow-vendor-change
-	unneededPackages=$(sudo zypper pa --unneeded | grep '^i' | cut -d '|' -f 3 | tr -d '\t' | tr -d ' ' | tr '\n' ' ')
-	if [ "$unneededPackages" != "" ]
+	# For Root
+	if [[ $USERID -eq 0 ]]
 	then
-		echo "Removing Following Unneeded Packages - $unneededPackages"
-		read -p "Continue? (y/n) " confirmClean
-		[[ "$confirmClean" == [yY] ]] && sudo ZYPP_MEDIANETWORK=1 zypper rm --clean-deps $unneededPackages
+		ZYPP_MEDIANETWORK=1 zypper ref && ZYPP_MEDIANETWORK=1 zypper dup -yl --no-recommends --allow-vendor-change
+		unneededPackages=$(zypper pa --unneeded | grep '^i' | cut -d '|' -f 3 | tr -d '\t' | tr -d ' ' | tr '\n' ' ')
+		if [ "$unneededPackages" != "" ]
+		then
+			echo "Removing Following Unneeded Packages - $unneededPackages"
+			read -p "Continue? (y/n) " confirmClean
+			[[ "$confirmClean" == [yY] ]] && ZYPP_MEDIANETWORK=1 zypper rm --clean-deps $unneededPackages
+		fi
+
+	# For Non root use Sudo
+	else
+		sudo ZYPP_MEDIANETWORK=1 zypper ref && sudo ZYPP_MEDIANETWORK=1 zypper dup -yl --no-recommends --allow-vendor-change
+		unneededPackages=$(sudo zypper pa --unneeded | grep '^i' | cut -d '|' -f 3 | tr -d '\t' | tr -d ' ' | tr '\n' ' ')
+		if [ "$unneededPackages" != "" ]
+		then
+			echo "Removing Following Unneeded Packages - $unneededPackages"
+			read -p "Continue? (y/n) " confirmClean
+			[[ "$confirmClean" == [yY] ]] && sudo ZYPP_MEDIANETWORK=1 zypper rm --clean-deps $unneededPackages
+		fi
 	fi
+		
 
 else
 	echo "Distro not supported yet"
@@ -84,5 +137,13 @@ then
 	echo ""
 	echo "#### Run Snap Update ####"
 	echo ""
-	sudo snap refresh
+	# For Root
+	# For Root
+	if [[ $USERID -eq 0 ]]
+	then
+		snap refresh
+	# For Non root use Sudo
+	else
+		sudo snap refresh
+	fi
 fi
