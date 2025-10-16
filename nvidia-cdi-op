@@ -1,0 +1,43 @@
+#!/bin/bash
+
+cdi=/etc/cdi/nvidia.yaml
+hook=/usr/share/libalpm/scripts/nvidia-ctk-cdi
+timeout_cmd='timeout -k 10s 2m'
+
+function show_help() {
+echo "$0 generate | fix-hook | --help | help"
+echo "generate : Generate the CDI file at ${cdi}. Existing file will be replaced if already exist."
+echo "fix-hook : Fix pacman hook and add timeout. This is usefull since sometime nvidia-ctk upgrade with nvidia-utils causing upgrade hanged."
+echo "--help   : Show help"
+}
+
+if [[ "$1" == "generate" ]]
+then
+    sudo timeout -k 10s 2m nvidia-ctk cdi generate --output="$cdi"
+elif [[ "$1" == "--help" ]] || [[ "$1" == "help" ]]
+then
+    show_help
+elif [[ "$1" == "fix-hook" ]]
+then
+    generate_cmd=$(cat /usr/share/libalpm/scripts/nvidia-ctk-cdi | grep -E "^\s*nvidia-ctk")
+    if [[ "$generate_cmd" =~ "$timeout_cmd" ]]
+    then
+        echo "Hook already had timeout"
+        exit 1
+    fi
+    new_cmd=$(cat /usr/share/libalpm/scripts/nvidia-ctk-cdi | grep -E "^\s*nvidia-ctk" | sed "s/nvidia-ctk /$timeout_cmd nvidia-ctk /g")
+    new_cmd_without_quiet=$(echo "$new_cmd" | sed 's/--quiet//g')
+    echo "Replacing - "
+    echo $generate_cmd
+    echo "With - "
+    echo $new_cmd_without_quiet
+    read -p "Continue? y/n (default - n): " option
+    if [[ "$option" == "y" ]] || [[ "$option" == "Y" ]]
+    then
+        sudo sed -i "s/$generate_cmd/$new_cmd_without_quiet/g" $hook
+    fi
+else
+    echo "Invalid / no action specified"
+    show_help
+    exit 1
+fi
