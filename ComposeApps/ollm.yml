@@ -31,6 +31,7 @@ services:
       - "11434:11434"
     volumes:
       - ${DEV_MOUNT_POINT}/System/ContainerVolumes/OLLAMA:/root/.ollama
+      - ${DEV_MOUNT_POINT}/System/ContainerVolumes/OLLAMA/USERSSH:/root/.ssh
 
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
