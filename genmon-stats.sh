@@ -29,15 +29,15 @@ function format_speed()
     if [[ $speed -ge 1073741824 ]]
     then
         netspeed=$(bc -l <<< "scale=1;$speed / 1073741824")
-        echo -ne "${netspeed}GB/s"
+        echo -ne "${netspeed}G/s"
     elif [[ $speed -ge 1048576 ]]
     then
         netspeed=$(bc -l <<< "scale=1;$speed / 1048576")
-        echo -ne "${netspeed}MB/s"
+        echo -ne "${netspeed}M/s"
     elif [[ $speed -ge 1024 ]]
     then
         netspeed=$(bc -l <<< "scale=1;$speed / 1024")
-        echo -ne "${netspeed}KB/s"
+        echo -ne "${netspeed}K/s"
     else
         netspeed=$(bc -l <<< "scale=1;$speed")
         echo -ne "${netspeed}B/s"
@@ -113,19 +113,15 @@ then
 fi
 
 ############################## Output Stats ###################################
-stats="""⌘ $(format_cpu $cpustats)    ␨ $(format_memory $usedram)/$(format_memory $totalram)"""
+stats="""⌘ $(format_cpu $cpustats)    ⚅ $(format_memory $usedram)/$(format_memory $totalram)"""
 if [[ $totalswap -ne 0 ]]
 then
 stats="""$stats    ♻ $(format_memory $usedswap)/$(format_memory $totalswap)"""
 fi
 if [[ $gpuexist -eq 1 ]]
 then
-    stats="""$stats    𐄥 $(format_gpu $usedgpu $usedgpuunit)/$(format_gpu $totalgpu $totalgpuunit)"""
+    stats="""$stats    🆛 $(format_gpu $usedgpu $usedgpuunit)/$(format_gpu $totalgpu $totalgpuunit)"""
 fi
 stats="""$stats    ⬆ $(format_speed $tx)  ⬇ $(format_speed $rx) """
 echo -e """$stats"""
-#
-#echo -e """<tool>CPU: $(format_cpu $cpustats)
-#RAM: $(format_memory $usedram) / $(format_memory $totalram)
-#SWAP: $(format_memory $usedswap) / $(format_memory $totalswap)
-#NET: 🠗$(format_speed $rx)   🠕$(format_speed $tx)</tool>"""
+
