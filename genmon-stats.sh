@@ -105,11 +105,10 @@ tx=$(((curr_tx - prev_tx) * 4))
 gpuexist=$(nvidia-smi -q>/dev/null 2>&1; [[ $? -eq 0 ]] && echo 1 || echo 0)
 if [[ $gpuexist -eq 1 ]]
 then
-    numgpu=$(nvidia-smi -q -d MEMORY | grep BAR | wc -l)
-    totalgpu=$(nvidia-smi -q -d MEMORY | grep BAR -A2 | grep Total | awk '{print $3}')
-    totalgpuunit=$(nvidia-smi -q -d MEMORY | grep BAR -A2 | grep Total | awk '{print $4}')
-    usedgpu=$(nvidia-smi -q -d MEMORY | grep BAR -A2 | grep Used | awk '{print $3}')
-    usedgpuunit=$(nvidia-smi -q -d MEMORY | grep BAR -A2 | grep Used | awk '{print $4}')
+    totalgpu=$(nvidia-smi -q -d MEMORY | grep 'FB Memory' -A4 | grep Total | awk '{print $3}')
+    totalgpuunit=$(nvidia-smi -q -d MEMORY | grep 'FB Memory' -A4 | grep Total | awk '{print $4}')
+    usedgpu=$(nvidia-smi -q -d MEMORY | grep 'FB Memory' -A4 | grep Used | awk '{print $3}')
+    usedgpuunit=$(nvidia-smi -q -d MEMORY | grep 'FB Memory' -A4 | grep Used | awk '{print $4}')
 fi
 
 ############################## Output Stats ###################################
