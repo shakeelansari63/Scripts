@@ -9,8 +9,3 @@ services:
       service: ollama
     devices:
       - nvidia.com/gpu=all
-
-  open-webui:
-    extends:
-      file: ollm.yml
-      service: open-webui
