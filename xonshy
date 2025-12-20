@@ -1,0 +1,107 @@
+#!/bin/bash
+XONSH_DIR=${XONSH_SHELL_HOME:-"$HOME/.xonsh-env"}
+XONSH_PY=${XONSH_PYTHON_VER:-3.12}
+XONSH_DEFAULT_PACKAGES="xonsh prompt-toolkit pygments"
+USER_WORK_DIR=${PWD}
+
+# Create dir if does not exist and switch to it
+[[ -e ${XONSH_DIR} ]] || mkdir -p ${XONSH_DIR}
+cd ${XONSH_DIR}
+
+# Read main arguments
+ACTION=$1
+
+# Remaining arguments
+shift 1
+REST_ARGS="$@"
+
+# Function to show help
+function show_help {
+    echo "Showing Help..."
+}
+
+function init_env {
+    # Initialize Xonsh Env
+    uv python pin $XONSH_PY
+    uv init --name xonshy
+    rm -rf .git .gitignore main.py README.md
+    echo -e """__pycache__/\n*.py[oc]\nbuild/\ndist/\nwheels/\n*.egg-info\n\n# Virtual environments\n.venv\n""">.gitignore
+    uv add $XONSH_DEFAULT_PACKAGES
+}
+
+# If there is no argument, just activate the Xonsh
+if [[ "${ACTION}" == "" ]]
+then
+    if [[ -e ".venv/bin/xonsh" ]]
+    then
+        cd ${USER_WORK_DIR}
+        ${XONSH_DIR}/.venv/bin/xonsh
+    elif [[ -e 'pyproject.toml' ]] && [[ ! -e ".venv" ]]
+    then
+        echo "Xonsh libraries probably missing. Use refresh to re-concile"
+        exit 1
+    elif [[ -e 'pyproject.toml' ]] && [[ -e ".venv" ]]
+    then
+        echo "Xonsh environment is not setup properly. Use reinit to setup again."
+        exit 1
+    else
+        echo "Xonsh environment is not setup. Use init to setup again."
+        exit 1
+    fi
+
+# Check for init argument
+elif [[ "${ACTION}" == "init" ]]
+then
+    if [[ -e '.venv' ]] || [[ -e 'pyproject.toml' ]]
+    then
+        echo "XONSH env already exist. Use reinit to override."
+        exit 1
+    fi
+
+    # Initialize
+    init_env
+
+# Re-init for clean init
+elif [[ "${ACTION}" == "reinit" ]]
+then
+    rm -rf ./*
+
+    # Initialize
+    init_env
+
+# Refresh Xonsh env
+elif [[ "${ACTION}" == "refresh" ]]
+then
+    if [[ ! -e 'pyproject.toml' ]]
+    then
+        echo "Xonsh environment is not setup. Use init to setup and reinit for clean setup."
+        exit 1
+    fi
+
+    uv sync
+
+# Add Library to Xonsh env
+elif [[ "${ACTION}" == "add" ]]
+then
+    if [[ ! -e 'pyproject.toml' ]]
+    then
+        echo "Xonsh environment is not setup. Use init to setup and reinit for clean setup."
+        exit 1
+    fi
+
+    if [[ "$REST_ARGS" == "" ]]
+    then
+        echo "No Package provided for Xonsh Env"
+        exit 1
+    fi
+
+    uv add $REST_ARGS
+
+# Invalid option
+else
+    echo "Invalid option..."
+    show_help
+    exit 1
+fi
+
+
