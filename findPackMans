@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+## Check if which command exist
+which env 1>/dev/null 2>&1
+if [[ $? -ne 0 ]]
+then
+    echo "Missing command: 'which'"
+    exit 1
+fi
+
+## Check all Package managers
+paruExist=$(which paru 2>/dev/null)
+yayExist=$(which yay 2>/dev/null)
+pacmanExist=$(which pacman 2>/dev/null)
+aptExist=$(which apt 2>/dev/null)
+dnfExist=$(which dnf 2>/dev/null)
+eopkgExist=$(which eopkg 2>/dev/null)
+zypperExist=$(which zypper 2>/dev/null)
+flatpakExist=$(which flatpak 2>/dev/null)
+snapExist=$(which snap 2>/dev/null)
+
+## List of All Package Managers
+availablePackManagers=""
+
+# Check System Package managers
+## Check for Paru
+if [[ "$paruExist" != "" ]]
+then
+    availablePackManagers="PARU"
+
+## Check for Yay
+elif [[ "$yayExist" != "" ]]
+then
+    availablePackManagers="YAY"
+
+## Check for Pacman
+elif [[ "$pacmanExist" != "" ]]
+then
+    availablePackManagers="PACMAN"
+
+## Check for Apt
+elif [[ "$aptExist" != "" ]]
+then
+    availablePackManagers="APT"
+
+## Check for Dnf
+elif [[ "$dnfExist" != "" ]]
+then
+    availablePackManagers="DNF"
+
+## Check for Eopkg
+elif [[ "$eopkgExist" != "" ]]
+then
+    availablePackManagers="EOPKG"
+
+## Check for Zypper
+elif [[ "$zypperExist" != "" ]]
+then
+    availablePackManagers="ZYPPER"
+fi
+
+# Check Generic Package Managers
+## Check Flatpak
+if [[ "$flatpakExist" != "" ]]
+then
+    if [[ "$availablePackManagers" == "" ]]
+    then
+        availablePackManagers="FLATPAK"
+    else
+        availablePackManagers=$availablePackManagers",FLATPAK"
+    fi
+fi
+
+## Check Snap
+if [[ "$snapExist" != "" ]]
+then
+    if [[ "$availablePackManagers" == "" ]]
+    then
+        availablePackManagers="SNAP"
+    else
+        availablePackManagers=$availablePackManagers",SNAP"
+    fi
+fi
+
+# Return Final List of package managers
+echo $availablePackManagers
