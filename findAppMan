@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+## Help Function
+function helpfn {
+    echo "Usage: $0 [ system | snap | flatpak | --help ]"
+    echo "  system  - Check system package managers"
+    echo "  snap    - Check snap package manager"
+    echo "  flatpak - Check flatpak package manager"
+    exit 1
+}
+
+## Check if which command exist
+which env 1>/dev/null 2>&1
+if [[ $? -ne 0 ]]
+then
+    echo "Missing command: 'which'"
+    exit 1
+fi
+
+option="$1"
+
+## Check all Package managers
+paruExist=$(which paru 2>/dev/null)
+yayExist=$(which yay 2>/dev/null)
+pacmanExist=$(which pacman 2>/dev/null)
+aptExist=$(which apt 2>/dev/null)
+dnfExist=$(which dnf 2>/dev/null)
+eopkgExist=$(which eopkg 2>/dev/null)
+zypperExist=$(which zypper 2>/dev/null)
+flatpakExist=$(which flatpak 2>/dev/null)
+snapExist=$(which snap 2>/dev/null)
+
+# Check System Package managers
+if [[ "$option" == "system" ]]
+then
+    ## Check for Paru
+    if [[ "$paruExist" != "" ]]
+    then
+        echo "PARU"
+
+    ## Check for Yay
+    elif [[ "$yayExist" != "" ]]
+    then
+        echo "YAY"
+
+    ## Check for Pacman
+    elif [[ "$pacmanExist" != "" ]]
+    then
+        echo "PACMAN"
+
+    ## Check for Apt
+    elif [[ "$aptExist" != "" ]]
+    then
+        echo "APT"
+
+    ## Check for Dnf
+    elif [[ "$dnfExist" != "" ]]
+    then
+        echo "DNF"
+
+    ## Check for Eopkg
+    elif [[ "$eopkgExist" != "" ]]
+    then
+        echo "EOPKG"
+
+    ## Check for Zypper
+    elif [[ "$zypperExist" != "" ]]
+    then
+        echo "ZYPPER"
+    fi
+
+## Check Snap
+elif [[ "$option" == "snap" ]] && [[ "$snapExist" != "" ]]
+then
+    echo "SNAP"
+
+## Check Flatpak
+elif [[ "$option" == "flatpak" ]] && [[ "$flatpakExist" != "" ]]
+then
+    echo "FLATPAK"
+
+## Show Help
+else
+    helpfn
+    exit 1
+fi

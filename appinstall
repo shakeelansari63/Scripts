@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+# Help Function
+function showHelp {
+    echo "Usage: $0 [manager] [package]"
+    echo "  manager: system, flatpak, snap, all"
+    echo "  package: package name "
+    exit 1
+}
+
+# Installer Function
+function installPackage {
+    local manager=$1
+    local packages="$2"
+    case $manager in
+        APT)
+            sudo apt install -y $packages
+            ;;
+        DNF)
+            sudo dnf install -y $packages
+            ;;
+        ZYPPER)
+            sudo zypper install -y $packages
+            ;;
+        PACMAN)
+            sudo pacman -Sy $packages
+            ;;
+        EOPKG)
+            sudo eopkg install -y $packages
+            ;;
+        PARU)
+            paru -Sy $packages
+            ;;
+        YAY)
+            yay -Sy $packages
+            ;;
+        FLATPAK)
+            flatpak install -y $packages
+            ;;
+        SNAP)
+            snap install $packages --classic
+            ;;
+    esac
+}
+
+## Define List Files
+archListFile=${DEV_MOUNT_POINT}/Configs/my-arch-packages.list
+debListFile=${DEV_MOUNT_POINT}/Configs/my-deb-packages.list
+rpmListFile=${DEV_MOUNT_POINT}/Configs/my-rpm-packages.list
+suseListFile=${DEV_MOUNT_POINT}/Configs/my-suse-packages.list
+eopListFile=${DEV_MOUNT_POINT}/Configs/my-eop-packages.list
+snapListFile=${DEV_MOUNT_POINT}/Configs/my-snap-packages.list
+flpkListFile=${DEV_MOUNT_POINT}/Configs/my-flpk-packages.list
+
+# Check installed Package managers and corresponding List file
+systemAppManager=$(findAppMan "system")
+if [[ "$systemAppManager" == "APT" ]]; then
+    systemListFile="$debListFile"
+elif [[ "$systemAppManager" == "DNF" ]]; then
+    systemListFile="$rpmListFile"
+elif [[ "$systemAppManager" == "ZYPPER" ]]; then
+    systemListFile="$suseListFile"
+elif [[ "$systemAppManager" == "PACMAN" ]] || [[ "$systemAppManager" == "PARU" ]] || [[ "$systemAppManager" == "YAY" ]]; then
+    systemListFile="$archListFile"
+elif [[ "$systemAppManager" == "EOPKG" ]]; then
+    systemListFile="$eopListFile"
+fi
+
+flatpakExist=$(findAppMan "flatpak")
+snapExist=$(findAppMan "snap")
+
+# Read CLI Options
+manager="$1"
+packageName="$2"
+
+# For all install and upgrade
+if [[ "$1" == "all" ]]; then
+    # Read System Packages List
+    if [[ "$systemAppManager" != "" ]] && [[ -e $systemListFile ]]; then
+        systemPackages="$(cat $systemListFile | tr '\n' ' ')"
+        installPackage "$systemAppManager" "$systemPackages"
+    fi
+
+    # Read Flatpak Packages List
+    if [[ "$flatpakExist" != "" ]] && [[ -e $flatpakListFile ]]; then
+        flatpakPackages="$(cat $flatpakListFile | tr '\n' ' ')"
+        installPackage "$flatpakExist" "$flatpakPackages"
+    fi
+
+    # Read Snap Packages List
+    if [[ "$snapExist" != "" ]] && [[ -e $snapListFile ]]; then
+        snapPackages="$(cat $snapListFile | tr '\n' ' ')"
+        installPackage "$snapExist" "$snapPackages"
+    fi
+fi
+
+# For Flatpak
+elif [[ "$manager" == "flatpak" ]] && [[ "$flatpakExist" != "" ]]; then
+    installPackage "$flatpakExist" "$packageName"
+
+# For Snap
+elif [[ "$manager" == "snap" ]] && [[ "$snapExist" != "" ]]; then
+    installPackage "$snapExist" "$packageName"
+
+# For System
+elif [[ "$manager" == "system" ]] && [[ "$systemAppManager" != "" ]]; then
+    installPackage "$systemAppManager" "$packageName"
+fi
