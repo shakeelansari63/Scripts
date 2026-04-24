@@ -3,8 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -55,12 +57,27 @@ func getAppYamls() (map[string]string, error) {
 
 func main() {
 	// Get all yamls
-	appYamls, err := getAppYamls()
+	allAppYamls, err := getAppYamls()
 	if err != nil {
 		panic(err)
 	}
 
-	for app, yaml := range appYamls {
-		fmt.Println(app, yaml)
+	// Root level commands
+	rootCommands := map[string]string{
+		"--list-all": "List all the registered apps.",
+		"--running":  "List the running apps.",
+		"--stop":     "Lists the running apps and user can select an app and stop it.",
+		"--stop-all": "Stop all running apps.",
+		"--help":     "Show this help page.",
+	}
+
+	// Combine Root level commands and app names in single slice
+	allRootMenus := append(
+		slices.Collect(maps.Keys(allAppYamls)),
+		slices.Collect(maps.Keys(rootCommands))...,
+	)
+
+	for a := range allRootMenus {
+		fmt.Println(a)
 	}
 }
