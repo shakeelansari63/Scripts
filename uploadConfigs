@@ -16,7 +16,7 @@ then
     echo
     echo -e "\033[0;35m> Updating Flatpaks List ------------------> \033[0m"
     echo
-    flatpak list --app --columns=application,origin | grep 'flathub' | awk '{print $1}' | tee my-flatpaks.list
+    flatpak list --app --columns=application,origin | grep 'flathub' | awk '{print $1}' | tee my-flpk-packages.list
     echo
 fi
 if [[ "$(which snap 2>/dev/null)" != "" && -e ~/snap/ ]]
@@ -24,7 +24,7 @@ then
     # Update My Installed Flatpaks List
     echo -e "\033[0;35m> Updating Snap List ----------------------> \033[0m"
     echo
-    ls ~/snap/ | tee my-snap.list
+    ls ~/snap/ | tee my-snap-packages.list
     #snap list | grep docker | awk '{print $1}' | tee -a my-snap.list
     echo
 fi
