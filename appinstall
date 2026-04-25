@@ -9,8 +9,10 @@ function showHelp {
 
 # Installer Function
 function installPackage {
-    local manager=$1
+    local manager="$1"
     local packages="$2"
+    echo "##### Installing package with $manager #####"
+    echo "##### $packages"
     case $manager in
         APT)
             sudo apt install -y $packages
@@ -28,7 +30,7 @@ function installPackage {
             sudo eopkg install -y $packages
             ;;
         PARU)
-            paru -Sy $packages
+            paru -Sy --needed $packages
             ;;
         YAY)
             yay -Sy $packages
@@ -37,9 +39,22 @@ function installPackage {
             flatpak install -y $packages
             ;;
         SNAP)
-            snap install $packages --classic
+            sudo snap install $packages --classic
             ;;
     esac
+}
+
+function trackPackage() {
+    local trackerFile=$1
+    local packages="$2"
+    
+    for package in $packages
+    do
+        if [[ -e "$trackerFile" ]] && [[ "$(cat $trackerFile | grep $package)" == "" ]] || [[ ! -e "$trackerFile" ]]
+        then
+            echo "$package" >> $systemListFile
+        fi  
+    done
 }
 
 ## Define List Files
@@ -70,10 +85,10 @@ snapExist=$(findAppMan "snap")
 
 # Read CLI Options
 manager="$1"
-packageName="$2"
+packageName="${@:2}"
 
 # For all install and upgrade
-if [[ "$1" == "all" ]]; then
+if [[ "$manager" == "all" ]]; then
     # Read System Packages List
     if [[ "$systemAppManager" != "" ]] && [[ -e $systemListFile ]]; then
         systemPackages="$(cat $systemListFile | tr '\n' ' ')"
@@ -81,27 +96,40 @@ if [[ "$1" == "all" ]]; then
     fi
 
     # Read Flatpak Packages List
-    if [[ "$flatpakExist" != "" ]] && [[ -e $flatpakListFile ]]; then
-        flatpakPackages="$(cat $flatpakListFile | tr '\n' ' ')"
+    if [[ "$flatpakExist" != "" ]] && [[ -e $flpkListFile ]]; then
+        flatpakPackages="$(cat $flpkListFile | tr '\n' ' ')"
         installPackage "$flatpakExist" "$flatpakPackages"
     fi
 
     # Read Snap Packages List
     if [[ "$snapExist" != "" ]] && [[ -e $snapListFile ]]; then
-        snapPackages="$(cat $snapListFile | tr '\n' ' ')"
-        installPackage "$snapExist" "$snapPackages"
+        while read snapPackage
+        do
+            installPackage "$snapExist" "$snapPackage"
+        done <<<$(cat $snapListFile)
     fi
-fi
 
 # For Flatpak
 elif [[ "$manager" == "flatpak" ]] && [[ "$flatpakExist" != "" ]]; then
     installPackage "$flatpakExist" "$packageName"
+    if [[ $? -eq 0 ]]
+    then
+        trackPackage $flpkListFile "$packageName"
+    fi
 
 # For Snap
 elif [[ "$manager" == "snap" ]] && [[ "$snapExist" != "" ]]; then
     installPackage "$snapExist" "$packageName"
+    if [[ $? -eq 0 ]]
+    then
+        trackPackage $snapListFile "$packageName"
+    fi
 
 # For System
 elif [[ "$manager" == "system" ]] && [[ "$systemAppManager" != "" ]]; then
     installPackage "$systemAppManager" "$packageName"
+    if [[ $? -eq 0 ]]
+    then
+        trackPackage $systemListFile "$packageName"
+    fi
 fi
