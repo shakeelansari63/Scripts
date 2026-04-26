@@ -1,0 +1,26 @@
+name: freak-opencode
+networks:
+  default:
+    name: freak-opencode-net
+services:
+  opencode:
+    image: ghcr.io/anomalyco/opencode:latest
+    container_name: freak-opencode
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        cd /project
+        opencode web --port=8096 --hostname=0.0.0.0
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - '[ "`busybox netstat -tuln | grep 8096 | wc -l`" -ne 0 ]'
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    ports:
+      - "8096:8096"
+    volumes:
+      - "${PWD}:/project"
+      - ${DEV_MOUNT_POINT}/System/ContainerVolumes/OPENCODE:/root/.opencode
