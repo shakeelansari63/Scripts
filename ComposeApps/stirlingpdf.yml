@@ -10,6 +10,7 @@ services:
       DISABLE_ADDITIONAL_FEATURES: true
       LANGS: en_GB
       UI_APPNAME: Freak's Stirling PDF
+      SECURITY_ENABLELOGIN: false
     healthcheck:
       test: ["CMD-SHELL", "/bin/bash -c ':> /dev/tcp/127.0.0.1/8080'"]
       interval: 30s
