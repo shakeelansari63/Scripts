@@ -13,12 +13,14 @@ APIS_DIR=${BASE_DIR}/API-Collections
 TRNG_DIR=${BASE_DIR}/Trainings
 WLPR_DIR=${BASE_DIR}/Wallpapers
 PRJT_DIR=${BASE_DIR}/Projects
+CNFG_DIR=${BASE_DIR}/Configs
 
 HOME_REPO='git@github.com:shakeelansari63/Home.git'
 NOTE_REPO='git@github.com:shakeelansari63/Notes.git'
 APIS_REPO='git@github.com:shakeelansari63/api-collections.git'
 TRNG_REPO='git@github.com:shakeelansari63/Training.git'
 WLPR_REPO='git@github.com:shakeelansari63/Wallpapers.git'
+CNFG_REPO='git@github.com:shakeelansari63/Configs.git'
 
 echo -e "\033[0;35m> Cloning Home Repo ------------------> \033[0m"
 if [[ ! -d $HOME_DIR ]]
@@ -58,6 +60,14 @@ then
     git clone $WLPR_REPO $WLPR_DIR
 else
     echo -e "\033[0;31m>> ! Wallpaper Already Exist \033[0m"
+fi
+
+echo -e "\033[0;35m> Cloning Configs Repo -------------> \033[0m"
+if [[ ! -d $CNFG_DIR ]]
+then
+    git clone $CNFG_REPO $CNFG_DIR
+else
+    echo -e "\033[0;31m>> ! Configs Already Exist \033[0m"
 fi
 
 echo -e "\033[0;35m> Creating Projects Directory --------> \033[0m"
