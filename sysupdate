@@ -149,10 +149,15 @@ fi
 FwUpMgr=$(findAppMan "firmware")
 if [[ "$FwUpMgr" == "FWUPMGR" ]]
 then
-    echo ""
-    echo "#### Run Firmware Update ####"
-    echo ""
-    sudo fwupdmgr refresh --force
-    sudo fwupdmgr get-updates
-    sudo fwupdmgr update
+    # Ask user if they want to update firmware
+    read -t 10 -n 1 -p "Do you want to upgrade firmware (y/n)? " fwupprpt
+    if [[ "$fwupprpt" == "y" ]]
+    then
+        echo ""
+        echo "#### Run Firmware Update ####"
+        echo ""
+        sudo fwupdmgr refresh --force
+        sudo fwupdmgr get-updates
+        sudo fwupdmgr update
+    fi
 fi
