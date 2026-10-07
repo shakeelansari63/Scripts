@@ -28,6 +28,7 @@ eopkgExist=$(which eopkg 2>/dev/null)
 zypperExist=$(which zypper 2>/dev/null)
 flatpakExist=$(which flatpak 2>/dev/null)
 snapExist=$(which snap 2>/dev/null)
+fwUpdExist=$(which fwupdmgr 2>/dev/null)
 
 # Check System Package managers
 if [[ "$option" == "system" ]]
@@ -77,6 +78,11 @@ then
 elif [[ "$option" == "flatpak" ]] && [[ "$flatpakExist" != "" ]]
 then
     echo "FLATPAK"
+
+## Check Firmware Upgrade Manager
+elif [[ "$option" == "firmware" ]] && [[ "$fwUpdExist" != "" ]]
+then
+    echo "FWUPMGR"
 
 ## Show Help
 else

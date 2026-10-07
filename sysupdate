@@ -144,3 +144,15 @@ then
   		sudo snap refresh
    	fi
 fi
+
+# For Firmware Upgrade
+FwUpMgr=$(findAppMan "firmware")
+if [[ "$FwUpMgr" == "FWUPMGR" ]]
+then
+    echo ""
+    echo "#### Run Firmware Update ####"
+    echo ""
+    sudo fwupdmgr refresh --force
+    sudo fwupdmgr get-updates
+    sudo fwupdmgr update
+fi
