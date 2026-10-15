@@ -126,10 +126,17 @@ elif [[ "$manager" == "snap" ]] && [[ "$snapExist" != "" ]]; then
     fi
 
 # For System
-elif [[ "$manager" == "system" ]] && [[ "$systemAppManager" != "" ]]; then
+elif [[ "$manager" == "system" ]] && [[ "$systemAppManager" != "" ]] && [[ "$packageName" != "" ]]; then
     installPackage "$systemAppManager" "$packageName"
     if [[ $? -eq 0 ]]
     then
         trackPackage $systemListFile "$packageName"
     fi
+
+# For System install all tracked packages
+elif [[ "$manager" == "system" ]] && [[ "$systemAppManager" != "" ]] && [[ "$packageName" == "" ]]; then
+    while read pkName
+    do
+        installPackage "$systemAppManager" "$pkName"
+    done<<<$(cat $systemListFile)
 fi
