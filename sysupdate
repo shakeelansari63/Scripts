@@ -1,118 +1,129 @@
 #!/usr/bin/env bash
 # Is Root
 USERID=$(id -u)
-AppMan=$(findAppMan "system")
+
+# For Firmware Upgrade
+# Ask Firmware Upgrade confirmation early
+FwUpMgr=$(findAppMan "firmware")
+FwUpPrpt="n"
+if [[ "$FwUpMgr" == "FWUPMGR" ]]
+then
+    # Ask user if they want to update firmware
+    read -t 10 -n 1 -p "Do you want to upgrade firmware (y/n)? " FwUpPrpt
+fi
 
 ## For System package managers
+AppMan=$(findAppMan "system")
+
 ## Upgrade with Paru
 if [[ "$AppMan" == "PARU" ]]
 then
-   	echo ""
-   	echo "#### System update via PARU ####"
-   	echo ""
-   	paru -Syyu && paru -c
+    echo ""
+    echo "#### System update via PARU ####"
+    echo ""
+    paru -Syyu && paru -c
 
 ## Upgrade with Yay
 elif [[ "$AppMan" == "YAY" ]]
 then
-   	echo ""
-   	echo "#### System update via YAY ####"
-   	echo ""
-   	yay -Syyu && yay -c
+    echo ""
+    echo "#### System update via YAY ####"
+    echo ""
+    yay -Syyu && yay -c
 
 ## Upgrade with Pacman
 elif [[ "$AppMan" == "PACMAN" ]]
 then
-   	echo ""
-   	echo "#### System update via PACMAN ####"
-   	echo ""
-   	# For Root
-   	if [[ $USERID -eq 0 ]]
-   	then
-  		pacman -Syyu && pacman -Rs $(pacman -Qqtd)
+    echo ""
+    echo "#### System update via PACMAN ####"
+    echo ""
+    # For Root
+    if [[ $USERID -eq 0 ]]
+    then
+          pacman -Syyu && pacman -Rs $(pacman -Qqtd)
 
-   	# For Non root use Sudo
-   	else
-  		sudo pacman -Syyu && sudo pacman -Rs $(pacman -Qqtd)
-   	fi
+    # For Non root use Sudo
+    else
+          sudo pacman -Syyu && sudo pacman -Rs $(pacman -Qqtd)
+    fi
 
 ## Upgrade with Apt
 elif [[ "$AppMan" == "APT" ]]
 then
-   	echo ""
-   	echo "#### System update via APT ####"
-   	echo ""
-   	# For Root
-   	if [[ $USERID -eq 0 ]]
-   	then
-  		apt update && apt full-upgrade
+    echo ""
+    echo "#### System update via APT ####"
+    echo ""
+    # For Root
+    if [[ $USERID -eq 0 ]]
+    then
+          apt update && apt full-upgrade
 
-   	# For Non root use Sudo
-   	else
-  		sudo apt update && sudo apt full-upgrade
-   	fi
+    # For Non root use Sudo
+    else
+          sudo apt update && sudo apt full-upgrade
+    fi
 
 ## Upgrade with Dnf
 elif [[ "$AppMan" == "DNF" ]]
 then
-   	echo ""
-   	echo "#### System update via DNF ####"
-   	echo ""
-   	# For Root
-   	if [[ $USERID -eq 0 ]]
-   	then
-  		dnf upgrade --refresh && dnf autoremove
+    echo ""
+    echo "#### System update via DNF ####"
+    echo ""
+    # For Root
+    if [[ $USERID -eq 0 ]]
+    then
+          dnf upgrade --refresh && dnf autoremove
 
-   	# For Non root use Sudo
-   	else
-  		sudo dnf upgrade --refresh && sudo dnf autoremove
-   	fi
+    # For Non root use Sudo
+    else
+          sudo dnf upgrade --refresh && sudo dnf autoremove
+    fi
 
 ## Upgrade with Eopkg
 elif [[ "$AppMan" == "EOPKG" ]]
 then
-   	echo ""
-   	echo "#### System update via EOPKG ####"
-   	echo ""
-   	# For Root
-   	if [[ $USERID -eq 0 ]]
-   	then
-  		eopkg upgrade && eopkg remove-orphans
+    echo ""
+    echo "#### System update via EOPKG ####"
+    echo ""
+    # For Root
+    if [[ $USERID -eq 0 ]]
+    then
+          eopkg upgrade && eopkg remove-orphans
 
-   	# For Non root use Sudo
-   	else
-  		sudo eopkg upgrade && sudo eopkg remove-orphans
-   	fi
+    # For Non root use Sudo
+    else
+          sudo eopkg upgrade && sudo eopkg remove-orphans
+    fi
 
 ## Upgrade with Zypper
 elif [[ "$AppMan" == "ZYPPER" ]]
 then
-   	echo ""
-   	echo "#### System update via ZYPPER ####"
-   	echo ""
-   	# For Root
-   	if [[ $USERID -eq 0 ]]
-   	then
-  		ZYPP_MEDIANETWORK=1 zypper ref && ZYPP_MEDIANETWORK=1 zypper dup -yl --no-recommends --allow-vendor-change
-  		unneededPackages=$(zypper pa --unneeded | grep '^i' | cut -d '|' -f 3 | tr -d '\t' | tr -d ' ' | tr '\n' ' ')
-  		if [ "$unneededPackages" != "" ]
-  		then
- 			echo "Removing Following Unneeded Packages - $unneededPackages"
- 			read -p "Continue? (y/n) " confirmClean
- 			[[ "$confirmClean" == [yY] ]] && ZYPP_MEDIANETWORK=1 zypper rm --clean-deps $unneededPackages
-  		fi
+    echo ""
+    echo "#### System update via ZYPPER ####"
+    echo ""
+    # For Root
+    if [[ $USERID -eq 0 ]]
+    then
+          ZYPP_MEDIANETWORK=1 zypper ref && ZYPP_MEDIANETWORK=1 zypper dup -yl --no-recommends --allow-vendor-change
+          unneededPackages=$(zypper pa --unneeded | grep '^i' | cut -d '|' -f 3 | tr -d '\t' | tr -d ' ' | tr '\n' ' ')
+          if [ "$unneededPackages" != "" ]
+          then
+             echo "Removing Following Unneeded Packages - $unneededPackages"
+             read -p "Continue? (y/n) " confirmClean
+             [[ "$confirmClean" == [yY] ]] && ZYPP_MEDIANETWORK=1 zypper rm --clean-deps $unneededPackages
+          fi
 
-   	# For Non root use Sudo
-   	else
-  		sudo ZYPP_MEDIANETWORK=1 zypper ref && sudo ZYPP_MEDIANETWORK=1 zypper dup -yl --no-recommends --allow-vendor-change
-  		unneededPackages=$(sudo zypper pa --unneeded | grep '^i' | cut -d '|' -f 3 | tr -d '\t' | tr -d ' ' | tr '\n' ' ')
-  		if [ "$unneededPackages" != "" ]
-  		then
- 			echo "Removing Following Unneeded Packages - $unneededPackages"
- 			read -p "Continue? (y/n) " confirmClean
- 			[[ "$confirmClean" == [yY] ]] && sudo ZYPP_MEDIANETWORK=1 zypper rm --clean-deps $unneededPackages
-  		fi
-   	fi
+    # For Non root use Sudo
+    else
+          sudo ZYPP_MEDIANETWORK=1 zypper ref && sudo ZYPP_MEDIANETWORK=1 zypper dup -yl --no-recommends --allow-vendor-change
+          unneededPackages=$(sudo zypper pa --unneeded | grep '^i' | cut -d '|' -f 3 | tr -d '\t' | tr -d ' ' | tr '\n' ' ')
+          if [ "$unneededPackages" != "" ]
+          then
+             echo "Removing Following Unneeded Packages - $unneededPackages"
+             read -p "Continue? (y/n) " confirmClean
+             [[ "$confirmClean" == [yY] ]] && sudo ZYPP_MEDIANETWORK=1 zypper rm --clean-deps $unneededPackages
+          fi
+    fi
 fi
 
 # For generic package managers
@@ -120,44 +131,40 @@ fi
 FlatPak=$(findAppMan "flatpak")
 if [[ "$FlatPak" == "FLATPAK" ]]
 then
-   	echo ""
-   	echo "#### Run Flatpak Update ####"
-   	echo ""
-   	flatpak update -y
-   	flatpak remove --unused
+    echo ""
+    echo "#### Run Flatpak Update ####"
+    echo ""
+    flatpak update -y
+    flatpak remove --unused
 fi
 
 ## Snap
 SnapPak=$(findAppMan "snap")
 if [[ "$SnapPak" == "SNAP" ]]
 then
-   	echo ""
-   	echo "#### Run Snap Update ####"
-   	echo ""
-   	# For Root
-   	if [[ $USERID -eq 0 ]]
-   	then
-  		snap refresh
-
-   	# For Non root use Sudo
-   	else
-  		sudo snap refresh
-   	fi
-fi
-
-# For Firmware Upgrade
-FwUpMgr=$(findAppMan "firmware")
-if [[ "$FwUpMgr" == "FWUPMGR" ]]
-then
-    # Ask user if they want to update firmware
-    read -t 10 -n 1 -p "Do you want to upgrade firmware (y/n)? " fwupprpt
-    if [[ "$fwupprpt" == "y" ]]
+    echo ""
+    echo "#### Run Snap Update ####"
+    echo ""
+    # For Root
+    if [[ $USERID -eq 0 ]]
     then
-        echo ""
-        echo "#### Run Firmware Update ####"
-        echo ""
-        sudo fwupdmgr refresh --force
-        sudo fwupdmgr get-updates
-        sudo fwupdmgr update
+          snap refresh
+
+    # For Non root use Sudo
+    else
+          sudo snap refresh
     fi
 fi
+
+# Firmware Upgrade
+## if user confirmed to upgrade firmware in beginning
+if [[ "$FwUpPrpt" == "y" ]]
+then
+    echo ""
+    echo "#### Run Firmware Update ####"
+    echo ""
+    sudo fwupdmgr refresh --force
+    sudo fwupdmgr get-updates
+    sudo fwupdmgr update
+fi
+
