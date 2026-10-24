@@ -6,6 +6,7 @@ WALLPAPERS_PATH=${DEV_MOUNT_POINT}/Wallpapers
 HOME_PATH=${DEV_MOUNT_POINT}/Home
 TRAININGS_PATH=${DEV_MOUNT_POINT}/Trainings
 APIS_PATH=${DEV_MOUNT_POINT}/API-Collections
+SKILLS_PATH=${DEV_MOUNT_POINT}/Skills
 
 ########### Update Configs ######################
 cd ${CONFIG_PATH}
@@ -67,3 +68,9 @@ echo
 echo -e "\033[0;35m> Updating API Collections ----------------> \033[0m"
 echo
 cd ${APIS_PATH} && gitPull && commitAndPush "Update API Collections"
+
+########### Update Agent Skills ######################
+echo
+echo -e "\033[0;35m> Updating Agent Skills ----------------> \033[0m"
+echo
+cd ${SKILLS_PATH} && gitPull && commitAndPush "Update Agent Skills"
