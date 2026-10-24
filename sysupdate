@@ -21,7 +21,7 @@ then
     echo ""
     echo "#### System update via PARU ####"
     echo ""
-    paru -Syyu && paru -c
+    paru -Syyu && paru -c && paru -Scc
 
 ## Upgrade with Yay
 elif [[ "$AppMan" == "YAY" ]]
@@ -29,7 +29,7 @@ then
     echo ""
     echo "#### System update via YAY ####"
     echo ""
-    yay -Syyu && yay -c
+    yay -Syyu && yay -c && yay -Scc
 
 ## Upgrade with Pacman
 elif [[ "$AppMan" == "PACMAN" ]]
